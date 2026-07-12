@@ -1,1 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Gastos Operativo Premium</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome para Iconos Financieros -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top left, #0b0f19, #020617);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        /* Personalización de la barra de desplazamiento */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        /* Fila de Saldo Tarjeta con brillo rojo de neón premium */
+        .glow-red-border {
+            border: 2px solid rgba(239, 68, 68, 0.85) !important;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.25);
+            background: rgba(244, 63, 94, 0.05) !important;
+        }
+        /* Estilo general para paneles con efecto glassmorphism */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        /* Inputs de fecha nativos estilizados */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+        /* Efecto de brillo de alta visibilidad para indicadores financieros */
+        .text-glow-red {
+            color: #f87171 !important;
+            text-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+        }
+        .text-glow-green {
+            color: #34d399 !important;
+            text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
 
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- Cabecera de la Aplicación -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800">
+            <div>
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-wallet text-xl text-slate-950"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                            Asesor de Gastos Inteligente
+                        </h1>
+                        <p class="text-sm text-slate-400">Control operativo de flujos y balances de caja en tiempo real</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fecha de Control del Sistema -->
+            <div class="glass-panel py-2 px-4 rounded-xl flex items-center gap-3 shadow-inner">
+                <i class="fa-regular fa-calendar-check text-emerald-400 animate-pulse"></i>
+                <div class="text-xs md:text-sm font-medium">
+                    <span class="text-slate-400">Fecha Control:</span> 
+                    <span id="current-date-badge" class="text-emerald-400 font-bold">11/07/2026</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Módulo del Asesor Inteligente -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Diagnóstico Financiero Automatizado -->
+            <div class="lg:col-span-2 glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl"></div>
+                
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="flex h-2 w-2 relative">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-emerald-400">Recomendación de tu Asesor Personal</h2>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="text-3xl">🤖</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-1" id="advisor-title">Analizando tus saldos...</h3>
+                            <p class="text-sm text-slate-300 leading-relaxed" id="advisor-advice">
+                                Introduce tus saldos en la línea roja de abajo para darte un diagnóstico preciso de tus finanzas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resumen de Métricas -->
+                <div class="grid grid-cols-3 gap-4 pt-6 mt-6 border-t border-slate-800/60 text-center">
+                    <div>
+                        <p class="text-xs text-slate-400">Presupuesto Inicial</p>
+                        <p class="text-lg font-bold text-emerald-400" id="total-income-stat">S/ 0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Saldo Tarjeta Total</p>
+                        <p class="text-lg font-bold text-sky-400" id="total-card-stat">S/ 0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Faltante Neto</p>
+                        <p class="text-lg font-bold text-rose-400" id="total-deficit-stat">S/ 0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones de Control -->
+            <div class="glass-panel p-6 rounded-2xl flex flex-col justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-lg text-white mb-2"><i class="fa-solid fa-gears text-emerald-400 mr-2"></i>Herramientas de Control</h3>
+                    <p class="text-xs text-slate-400 mb-4">Crea nuevas columnas de gasto o restablece tu libro contable al estado inicial del Excel en un clic.</p>
+                </div>
+                
+                <div class="space-y-3">
+                    <button onclick="openAddCategoryModal()" class="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all duration-200 flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-plus"></i> Añadir Columna de Gasto
+                    </button>
+                    <button onclick="resetToExcelDefaults()" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-rotate-left text-slate-400"></i> Cargar Datos Originales (Excel)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notificación No Intrusiva -->
+        <div id="custom-notification" class="fixed bottom-5 right-5 glass-panel border-l-4 border-emerald-500 py-3 px-5 rounded-xl shadow-2xl z-50 flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300">
+            <span class="text-emerald-400 text-lg">💰</span>
+            <p id="notification-text" class="text-xs font-semibold text-slate-200"></p>
+        </div>
+
+        <main class="glass-panel rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+            <div class="p-6 border-b border-slate-800/80 bg-slate-900/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-table text-emerald-400"></i> Cuadro de Control Operativo
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Todos los campos numéricos y de fechas son 100% editables mediante calendarios interactivos. Se recalculan al instante.</p>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-950/60 p-2 rounded-lg border border-slate-800">
+                    <span class="text-[11px] text-slate-400 font-medium">Borde Rojo =</span>
+                    <span class="px-2 py-0.5 bg-rose-500/15 text-rose-400 text-[10px] font-black rounded border border-rose-500/30 uppercase tracking-wider animate-pulse">Línea de Saldo Editable (Soles)</span>
+                </div>
+            </div>
+
+            <!-- Contenedor Responsivo para evitar desbordes -->
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[1000px] border-collapse text-left text-sm table-fixed">
+                    <thead>
+                        <tr class="bg-slate-950/85 border-b border-slate-800" id="table-header-row">
+                            <!-- Cabeceras renderizadas de forma dinámica en una única fila para alineación perfecta -->
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/40" id="spreadsheet-body">
+                        <!-- Filas de datos cargadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <!-- Pie de página -->
+        <footer class="text-center py-4 text-xs text-slate-500 flex justify-between items-center px-4">
+            <p>© 2026 Asesor Financiero Personal. Tus datos se guardan automáticamente de forma local.</p>
+            <div class="flex gap-4">
+                <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Conectado</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Modal para Añadir Categorías -->
+    <div id="add-category-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden transition-all duration-300 opacity-0">
+        <div class="glass-panel rounded-2xl w-full max-w-md p-6 border border-slate-700/60 shadow-2xl transform scale-95 transition-all duration-300" id="modal-card">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-folder-plus text-emerald-400"></i> Nueva Columna Financiera
+                </h3>
+                <button onclick="closeAddCategoryModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nombre del Gasto / Categoría</label>
+                    <input type="text" id="new-cat-name" placeholder="Ej: PASAJES, MENÚ" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Comportamiento del Calendario</label>
+                    <select id="new-cat-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm">
+                        <option value="working">Lunes a Viernes (Excluye Fines de Semana)</option>
+                        <option value="all">Todos los Días (Calendario Completo)</option>
+                        <option value="saturday">Solo Sábados</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Fecha Inicio</label>
+                        <input type="date" id="new-cat-start" value="2026-06-22" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Fecha Término</label>
+                        <input type="date" id="new-cat-end" value="2026-07-22" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Presupuesto Inicial (S/)</label>
+                        <input type="number" id="new-cat-income" placeholder="77.00" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Saldo Inicial Tarjeta (S/)</label>
+                        <input type="number" id="new-cat-saldo" placeholder="42.00" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition text-sm">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3">
+                    <button onclick="closeAddCategoryModal()" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-sm font-semibold">Cancelar</button>
+                    <button onclick="saveNewCategory()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold transition text-sm">Añadir Columna</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Scripts and Logic -->
+    <script>
+        
+        // Datos por defecto exactos basados en image_4bd3f5.png e image_4bee9d.png
+        const DEFAULT_CATEGORIES = [
+            {
+                id: 'cat_movilidad',
+                name: 'MOVILIDAD',
+                color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+                headerColor: 'bg-emerald-500 text-slate-950',
+                daysType: 'working', // L-V
+                start: '2026-06-22',
+                actual: '2026-07-11', // Sábado 11 de Julio del 2026
+                end: '2026-07-22',
+                income: 77.00,
+                saldoTarjeta: 42.00
+            },
+            {
+                id: 'cat_desayuno',
+                name: 'DESAY MENU L-V',
+                color: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+                headerColor: 'bg-amber-400 text-slate-950',
+                daysType: 'working', // L-V
+                start: '2026-06-22',
+                actual: '2026-07-11',
+                end: '2026-07-22',
+                income: 319.00,
+                saldoTarjeta: 174.00
+            },
+            {
+                id: 'cat_saba',
+                name: 'MENU SABA',
+                color: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
+                headerColor: 'bg-orange-500 text-slate-950',
+                daysType: 'saturday', // Solo Sábados
+                start: '2026-06-22',
+                actual: '2026-07-11',
+                end: '2026-07-22',
+                income: 48.00,
+                saldoTarjeta: 0.00
+            }
+        ];
+
+        // Estado Global guardado localmente
+        let state = {
+            categories: JSON.parse(localStorage.getItem('premium_budget_state_aligned_v3')) || [...DEFAULT_CATEGORIES]
+        };
+
+        // Alertas visuales no bloqueantes
+        function showNotification(message) {
+            const notif = document.getElementById('custom-notification');
+            const text = document.getElementById('notification-text');
+            text.innerText = message;
+            notif.classList.remove('translate-y-20', 'opacity-0');
+            notif.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                notif.classList.remove('translate-y-0', 'opacity-100');
+                notif.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+
+        // Algoritmo para calcular los días del ciclo completo y los días restantes según el tipo de calendario
+        function calculateDaysByMode(startDateStr, endDateStr, mode, isRemaining = false) {
+            if (!startDateStr || !endDateStr) return 0;
+            
+            // Separación manual de strings para mitigar problemas de huso horario del navegador
+            const startParts = startDateStr.split('-');
+            const endParts = endDateStr.split('-');
+            
+            if (startParts.length !== 3 || endParts.length !== 3) return 0;
+            
+            let start = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+            let end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+            
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+            
+            // Regla de Excel: La fecha de término es exclusiva en gastos (se calcula hasta end - 1 día)
+            const targetEnd = new Date(end);
+            targetEnd.setDate(targetEnd.getDate() - 1);
+            
+            let current = new Date(start);
+            if (isRemaining) {
+                // Para días restantes de amortización, se empieza a contar desde el día posterior a la fecha actual
+                current.setDate(current.getDate() + 1);
+            }
+            
+            let count = 0;
+            while (current <= targetEnd) {
+                const day = current.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+                if (mode === 'working') {
+                    if (day !== 0 && day !== 6) {
+                        count++;
+                    }
+                } else if (mode === 'saturday') {
+                    if (day === 6) {
+                        count++;
+                    }
+                } else {
+                    count++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            return count;
+        }
+
+        // Calcula los días calendario faltantes exactos (Fecha de Término - Fecha Actual)
+        function calculateCalendarDaysRemaining(actualDateStr, endDateStr) {
+            if (!actualDateStr || !endDateStr) return 0;
+            const actualParts = actualDateStr.split('-');
+            const endParts = endDateStr.split('-');
+            if (actualParts.length !== 3 || endParts.length !== 3) return 0;
+            
+            let actual = new Date(actualParts[0], actualParts[1] - 1, actualParts[2]);
+            let end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+            
+            if (isNaN(actual.getTime()) || isNaN(end.getTime())) return 0;
+            
+            const diffTime = end.getTime() - actual.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays > 0 ? diffDays : 0;
+        }
+
+        // Formateador oficial de moneda: Soles Peruanos con 2 decimales
+        function formatPEN(val) {
+            if (isNaN(val) || val === null) return "S/ 0.00";
+            const isNegative = val < 0;
+            const absVal = Math.abs(val).toFixed(2);
+            return `${isNegative ? '-' : ''}S/ ${absVal}`;
+        }
+
+
+        // Renderización completa del dashboard
+        function renderDashboard() {
+            const headerRow = document.getElementById('table-header-row');
+            const tbody = document.getElementById('spreadsheet-body');
+            
+            // 1. Renderizar Headers de Columnas (Alineación perfecta asegurada)
+            let headerHTML = `
+                <th class="p-4 font-bold text-xs uppercase tracking-wider text-slate-400 w-1/5 min-w-[200px]">
+                    INDICADOR / CUENTA
+                </th>
+            `;
+            
+            state.categories.forEach((cat, index) => {
+                headerHTML += `
+                    <th class="p-4 text-center font-bold relative group w-52 min-w-[180px]">
+                        <div class="px-3 py-1.5 rounded-lg inline-flex items-center gap-2 ${cat.headerColor || 'bg-slate-800 text-white'} text-xs font-black shadow-md uppercase tracking-wider">
+                            <span>${cat.name}</span>
+                            <button onclick="removeCategory(${index})" class="text-slate-950/60 hover:text-slate-950 transition ml-1" title="Eliminar Columna">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                            </button>
+                        </div>
+                    </th>
+                `;
+            });
+
+            // Columna de Totales a la derecha
+            headerHTML += `
+                <th class="p-4 font-bold text-xs uppercase tracking-wider text-slate-200 bg-slate-900 w-44 text-center min-w-[160px]">
+                    TOTALES
+                </th>
+            `;
+            
+            headerRow.innerHTML = headerHTML;
+
+            // 2. Fórmulas y especificación de filas según el Excel de referencia
+            const rowsConfig = [
+                // Fila cuántos días ahora calcula días calendario (Fórmula: Término - Actual)
+                { id: 'cuantos_dias', label: 'CUANTOS DIAS', icon: 'fa-hourglass-half', calc: (c) => calculateCalendarDaysRemaining(c.actual, c.end), isCalculated: true, labelClass: 'text-slate-400 font-semibold', hideTotal: true },
+                { id: 'fecha_inicio', label: 'FECHA DE INICIO', icon: 'fa-calendar-plus', isDate: true, key: 'start', hideTotal: true },
+                { id: 'fecha_actual', label: 'FECHA ACTUAL', icon: 'fa-calendar-day', isDate: true, key: 'actual', hideTotal: true },
+                { id: 'fecha_termino', label: 'FECHA DE TERMINO', icon: 'fa-calendar-check', isDate: true, key: 'end', labelClass: 'text-rose-400 font-bold', hideTotal: true },
+                { id: 'ingreso_gasto', label: 'INGRESO GASTO', icon: 'fa-money-bill-wave', isNumber: true, key: 'income', rowClass: 'bg-slate-900/30', labelClass: 'text-red-500 font-black' },
+                { id: 'gasto_por_dia', label: 'GASTO POR DIA', icon: 'fa-calculator', calc: (c) => {
+                    const totalPeriodDays = calculateDaysByMode(c.start, c.end, c.daysType, false);
+                    return totalPeriodDays > 0 ? (c.income / totalPeriodDays) : 0;
+                }, isCalculated: true, format: true },
+                { id: 'resultado_saldo', label: 'RESULTADO SALDO', icon: 'fa-chart-pie', calc: (c) => {
+                    const remainingDays = calculateDaysByMode(c.actual, c.end, c.daysType, true);
+                    const totalPeriodDays = calculateDaysByMode(c.start, c.end, c.daysType, false);
+                    const dailyRate = totalPeriodDays > 0 ? (c.income / totalPeriodDays) : 0;
+                    return remainingDays * dailyRate;
+                }, isCalculated: true, format: true, rowClass: 'bg-amber-500/10 border-amber-500/20', labelClass: 'text-amber-400 font-bold' },
+                { id: 'saldo_tarjeta', label: 'SALDO TARJETA', icon: 'fa-credit-card', isNumber: true, key: 'saldoTarjeta', rowClass: 'glow-red-border border-2 bg-rose-950/20 my-2 rounded-xl transition-all duration-300', labelClass: 'text-rose-400 font-black tracking-wide' },
+                { id: 'faltante', label: 'FALTANTE', icon: 'fa-circle-exclamation', calc: (c) => {
+                    const remainingDays = calculateDaysByMode(c.actual, c.end, c.daysType, true);
+                    const totalPeriodDays = calculateDaysByMode(c.start, c.end, c.daysType, false);
+                    const dailyRate = totalPeriodDays > 0 ? (c.income / totalPeriodDays) : 0;
+                    const resultBudget = remainingDays * dailyRate;
+                    return resultBudget - c.saldoTarjeta;
+                }, isCalculated: true, format: true, labelClass: 'text-slate-300 font-black' }
+            ];
+
+            tbody.innerHTML = '';
+
+            // 3. Renderizado preciso fila por fila
+            rowsConfig.forEach((rowSpec) => {
+                let rowHTML = `<tr class="border-b border-slate-800/40 hover:bg-slate-900/20 transition-colors ${rowSpec.rowClass || ''}">`;
+                
+                // Etiqueta lateral izquierda
+                rowHTML += `
+                    <td class="p-4 font-semibold text-slate-300 flex items-center gap-2.5">
+                        <i class="fa-solid ${rowSpec.icon} w-5 text-slate-500 text-center"></i>
+                        <span class="${rowSpec.labelClass || ''}">${rowSpec.label}</span>
+                    </td>
+                `;
+
+                let totalAcumulado = 0;
+
+                // Renderizar columnas de categorías correspondientes
+                state.categories.forEach((cat, cIdx) => {
+                    if (rowSpec.isDate) {
+                        rowHTML += `
+                            <td class="p-3 text-center">
+                                <div class="relative inline-block w-full max-w-[170px]">
+                                    <input type="date" value="${cat[rowSpec.key]}" 
+                                        onchange="updateValue(${cIdx}, '${rowSpec.key}', this.value)" 
+                                        class="bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-lg px-2.5 py-1.5 text-center text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-full transition cursor-pointer">
+                                </div>
+                            </td>
+                        `;
+                    } else if (rowSpec.isNumber) {
+                        const isTarjeta = rowSpec.key === 'saldoTarjeta';
+                        const numericVal = parseFloat(cat[rowSpec.key] || 0).toFixed(2);
+                        rowHTML += `
+                            <td class="p-3 text-center">
+                                <div class="relative inline-flex items-center w-full max-w-[150px] rounded-lg bg-slate-950 border ${isTarjeta ? 'border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/30' : 'border-slate-800 focus-within:border-slate-700'}">
+                                    <span class="pl-2.5 text-xs text-slate-500 font-bold select-none">S/</span>
+                                    <input type="number" step="0.01" value="${numericVal}" 
+                                        onchange="updateValue(${cIdx}, '${rowSpec.key}', parseFloat(this.value) || 0)" 
+                                        onblur="this.value = parseFloat(this.value || 0).toFixed(2)"
+                                        class="bg-transparent border-none text-right px-2.5 py-1.5 text-xs text-white font-black w-full focus:outline-none">
+                                </div>
+                            </td>
+                        `;
+                        totalAcumulado += parseFloat(cat[rowSpec.key]) || 0;
+                    } else if (rowSpec.isCalculated) {
+                        const calculatedVal = rowSpec.calc(cat);
+                        totalAcumulado += calculatedVal;
+                        
+                        let cellContent = '';
+                        if (rowSpec.format) {
+                            if (rowSpec.id === 'faltante') {
+                                // Lógica de colores del semáforo financiero para Faltante (Sobra/Verde si <= 0, Falta/Rojo si > 0)
+                                const hasDeficit = calculatedVal > 0;
+                                const glowClass = hasDeficit ? 'text-glow-red animate-pulse font-extrabold' : 'text-glow-green font-extrabold';
+                                cellContent = `<span class="${glowClass}">${formatPEN(calculatedVal)}</span>`;
+                            } else {
+                                cellContent = `<span class="font-bold text-slate-200">${formatPEN(calculatedVal)}</span>`;
+                            }
+                        } else {
+                            cellContent = `<span class="font-bold text-slate-300">${calculatedVal}</span>`;
+                        }
+
+                        rowHTML += `<td class="p-3 text-center">${cellContent}</td>`;
+                    }
+                });
+
+                // Renderizar Columna de "TOTALES" a la derecha
+                let totalDisplay = '';
+                if (rowSpec.hideTotal) {
+                    totalDisplay = '<span class="text-slate-600">-</span>';
+                } else if (rowSpec.format || rowSpec.isNumber) {
+                    if (rowSpec.id === 'faltante') {
+                        const hasDeficit = totalAcumulado > 0;
+                        const glowClass = hasDeficit ? 'text-glow-red font-black' : 'text-glow-green font-black';
+                        totalDisplay = `<span class="${glowClass}">${formatPEN(totalAcumulado)}</span>`;
+                    } else {
+                        totalDisplay = `<span class="font-black text-white">${formatPEN(totalAcumulado)}</span>`;
+                    }
+                } else {
+                    totalDisplay = `<span class="font-bold text-slate-300">${totalAcumulado}</span>`;
+                }
+
+                rowHTML += `
+                    <td class="p-4 text-center bg-slate-950/50 font-black border-l border-slate-800">
+                        ${totalDisplay}
+                    </td>
+                `;
+
+                rowHTML += `</tr>`;
+                tbody.innerHTML += rowHTML;
+            });
+
+            // Persistir cambios locales en navegador
+            localStorage.setItem('premium_budget_state_aligned_v3', JSON.stringify(state.categories));
+            
+            // Actualizar asesor y métricas superiores
+            updateAdvisorMetrics();
+        }
+
+
+        // Actualiza el motor de Inteligencia Artificial Local y Métricas del Header
+        function updateAdvisorMetrics() {
+            let totalIncome = 0;
+            let totalCard = 0;
+            let totalDeficit = 0;
+            let categoriesWithDeficit = [];
+
+            state.categories.forEach(cat => {
+                totalIncome += cat.income;
+                totalCard += cat.saldoTarjeta;
+
+                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
+                const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
+                const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
+                const resultBudget = remainingDays * dailyRate;
+                const deficit = resultBudget - cat.saldoTarjeta;
+
+                if (deficit > 0) {
+                    totalDeficit += deficit;
+                    categoriesWithDeficit.push({ name: cat.name, val: deficit });
+                }
+            });
+
+            // Actualizar Tarjetas de Estadísticas
+            document.getElementById('total-income-stat').innerText = formatPEN(totalIncome);
+            document.getElementById('total-card-stat').innerText = formatPEN(totalCard);
+            document.getElementById('total-deficit-stat').innerText = formatPEN(totalDeficit);
+
+            const advTitle = document.getElementById('advisor-title');
+            const advAdvice = document.getElementById('advisor-advice');
+
+            if (state.categories.length === 0) {
+                advTitle.innerText = "No hay columnas de control activas";
+                advAdvice.innerText = "Agrega una nueva columna de gasto o haz clic en 'Cargar Datos Originales' para analizar tus finanzas.";
+                return;
+            }
+
+            if (totalDeficit > 0) {
+                advTitle.innerText = "⚠️ Advertencia de Saldos Faltantes";
+                let listNames = categoriesWithDeficit.map(c => `<strong>${c.name}</strong> (Faltante: ${formatPEN(c.val)})`).join(', ');
+                advAdvice.innerHTML = `Tu saldo disponible no cubre el presupuesto restante. Registras una brecha total de ${formatPEN(totalDeficit)}. Se recomienda inyectar saldo a tus cuentas en: ${listNames}.`;
+            } else {
+                advTitle.innerText = "🟢 Estado Financiero Saludable";
+                advAdvice.innerHTML = `¡Fabuloso! Tu saldo actual en tarjeta cubre con exactitud matemática el consumo diario proyectado para lo que resta del período. Mantén este ritmo de gasto.`;
+            }
+        }
+
+        // Función para cambiar valores directamente de las celdas
+        function updateValue(categoryIndex, key, value) {
+            state.categories[categoryIndex][key] = value;
+            renderDashboard();
+        }
+
+        // Eliminar categorías existentes
+        function removeCategory(index) {
+            const name = state.categories[index].name;
+            state.categories.splice(index, 1);
+            renderDashboard();
+            showNotification(`Columna "${name}" eliminada.`);
+        }
+
+        // Modales interactivos
+        function openAddCategoryModal() {
+            const modal = document.getElementById('add-category-modal');
+            const card = document.getElementById('modal-card');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+            }, 15);
+        }
+
+        function closeAddCategoryModal() {
+            const modal = document.getElementById('add-category-modal');
+            const card = document.getElementById('modal-card');
+            modal.classList.remove('opacity-100');
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Crear nueva columna desde el Modal
+        function saveNewCategory() {
+            const nameInput = document.getElementById('new-cat-name');
+            const name = nameInput.value.trim().toUpperCase();
+            const type = document.getElementById('new-cat-type').value;
+            const start = document.getElementById('new-cat-start').value;
+            const end = document.getElementById('new-cat-end').value;
+            const income = parseFloat(document.getElementById('new-cat-income').value) || 0;
+            const saldo = parseFloat(document.getElementById('new-cat-saldo').value) || 0;
+
+            if (!name) {
+                showNotification("¡Por favor, asigna un nombre para la categoría!");
+                return;
+            }
+
+            const colorsList = [
+                { color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40', hColor: 'bg-emerald-500 text-slate-950' },
+                { color: 'bg-amber-500/20 text-amber-300 border-amber-500/40', hColor: 'bg-amber-400 text-slate-950' },
+                { color: 'bg-orange-500/20 text-orange-400 border-orange-500/40', hColor: 'bg-orange-500 text-slate-950' },
+                { color: 'bg-sky-500/20 text-sky-400 border-sky-500/40', hColor: 'bg-sky-500 text-slate-950' },
+                { color: 'bg-purple-500/20 text-purple-400 border-purple-500/40', hColor: 'bg-purple-500 text-slate-950' }
+            ];
+            const chosenColors = colorsList[Math.floor(Math.random() * colorsList.length)];
+
+            state.categories.push({
+                id: 'cat_' + Date.now(),
+                name: name,
+                color: chosenColors.color,
+                headerColor: chosenColors.hColor,
+                daysType: type,
+                start: start,
+                actual: '2026-07-11', // Sincronizado con la fecha del sistema
+                end: end,
+                income: income,
+                saldoTarjeta: saldo
+            });
+
+            // Limpieza de inputs
+            nameInput.value = '';
+            document.getElementById('new-cat-income').value = '';
+            document.getElementById('new-cat-saldo').value = '';
+
+            closeAddCategoryModal();
+            renderDashboard();
+            showNotification(`¡Columna "${name}" creada correctamente!`);
+        }
+
+        // Restablecer al estado original
+        function resetToExcelDefaults() {
+            state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+            renderDashboard();
+            showNotification("Datos restablecidos al estado original del Excel.");
+        }
+
+        // Arranque de la app
+        window.onload = function() {
+            renderDashboard();
+        }
+    </script>
+</body>
+</html>
