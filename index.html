@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Gastos Operativo Premium</title>
-    <!-- Tailwind CSS para diseño moderno responsivo -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts (Inter) para tipografía premium -->
+    <!-- Google Fonts (Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- FontAwesome para iconografía contable -->
+    <!-- FontAwesome para Iconos Financieros -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -55,14 +55,23 @@
         input[type="date"]::-webkit-calendar-picker-indicator:hover {
             opacity: 1;
         }
+        /* Ocultar flechas de control nativas (spinners) en inputs numéricos */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
         /* Efecto de brillo de alta visibilidad para indicadores financieros */
         .text-glow-red {
-            color: #ff6b6b !important;
-            text-shadow: 0 0 12px rgba(239, 68, 68, 0.75);
+            color: #f87171 !important;
+            text-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
         }
         .text-glow-green {
-            color: #10b981 !important;
-            text-shadow: 0 0 12px rgba(16, 185, 129, 0.75);
+            color: #34d399 !important;
+            text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
         }
     </style>
 </head>
@@ -91,7 +100,7 @@
                 <i class="fa-regular fa-calendar-check text-emerald-400 animate-pulse"></i>
                 <div class="text-xs md:text-sm font-medium">
                     <span class="text-slate-400">Fecha Control:</span> 
-                    <span id="current-date-badge" class="text-emerald-400 font-bold">11/07/2026</span>
+                    <span id="current-date-badge" class="text-emerald-400 font-bold">12/07/2026</span>
                 </div>
             </div>
         </header>
@@ -261,6 +270,7 @@
         </div>
     </div>
 
+    <!-- Script de lógica de negocio y cálculos financieros -->
     <script>
         /* Datos por defecto basados exactamente en tu planilla Excel original */
         const DEFAULT_CATEGORIES = [
@@ -271,10 +281,10 @@
                 headerColor: 'bg-emerald-500 text-slate-950',
                 daysType: 'working', /* Lunes a Viernes únicamente */
                 start: '2026-06-22',
-                actual: '2026-07-11', /* Sábado de control */
+                actual: '2026-07-12', /* Domingo de control real */
                 end: '2026-07-22',
                 income: 77.00,
-                saldoTarjeta: 42.00
+                saldoTarjeta: 10.00
             },
             {
                 id: 'cat_desayuno',
@@ -283,10 +293,10 @@
                 headerColor: 'bg-amber-400 text-slate-950',
                 daysType: 'working', /* Lunes a Viernes únicamente */
                 start: '2026-06-22',
-                actual: '2026-07-11',
+                actual: '2026-07-12',
                 end: '2026-07-22',
                 income: 319.00,
-                saldoTarjeta: 174.00
+                saldoTarjeta: 81.00
             },
             {
                 id: 'cat_saba',
@@ -295,16 +305,16 @@
                 headerColor: 'bg-orange-500 text-slate-950',
                 daysType: 'saturday', /* Solo Sábados */
                 start: '2026-06-22',
-                actual: '2026-07-11',
+                actual: '2026-07-12',
                 end: '2026-07-22',
                 income: 48.00,
-                saldoTarjeta: 0.00
+                saldoTarjeta: 12.00
             }
         ];
 
         /* Inicialización Segura del Estado (Previene caídas por datos corruptos en Local Storage) */
         let state = { categories: [] };
-        const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v6';
+        const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v9';
 
         function initApp() {
             try {
@@ -312,7 +322,7 @@
                 if (storedData) {
                     const parsed = JSON.parse(storedData);
                     if (Array.isArray(parsed) && parsed.length > 0) {
-                        /* Sanitizar y reconstruir propiedades para evitar valores undefined */
+                        /* Sanitizar y reconstruir propiedades para evitar valores undefined o nulos */
                         state.categories = parsed.map(cat => ({
                             id: cat.id || 'cat_' + Math.random(),
                             name: (cat.name || 'SIN NOMBRE').toUpperCase(),
@@ -320,7 +330,7 @@
                             headerColor: cat.headerColor || 'bg-emerald-500 text-slate-950',
                             daysType: cat.daysType || 'working',
                             start: cat.start || '2026-06-22',
-                            actual: cat.actual || '2026-07-11',
+                            actual: cat.actual || '2026-07-12',
                             end: cat.end || '2026-07-22',
                             income: parseFloat(cat.income) || 0,
                             saldoTarjeta: parseFloat(cat.saldoTarjeta) || 0
@@ -352,7 +362,7 @@
             }
         }
 
-        /* Calcula de forma robusta los días útiles para amortizaciones omitiendo fines de semana */
+        /* Calcula de forma robusta los días útiles para amortizaciones omitiendo fines de semana o filtrando sábados */
         function calculateDaysByMode(startDateStr, endDateStr, mode, isRemaining = false) {
             if (!startDateStr || !endDateStr || typeof startDateStr !== 'string' || typeof endDateStr !== 'string') return 0;
             
@@ -532,7 +542,7 @@
                         let cellContent = '';
                         if (rowSpec.format) {
                             if (rowSpec.id === 'faltante') {
-                                /* Semáforo financiero reactivo y vibrante */
+                                /* Semáforo financiero reactivo y vibrante (Rojo cuando falta, Verde cuando sobra) */
                                 const hasDeficit = calculatedVal > 0;
                                 const glowClass = hasDeficit ? 'text-glow-red font-extrabold animate-pulse' : 'text-glow-green font-extrabold';
                                 cellContent = `<span class="${glowClass}">${formatPEN(calculatedVal)}</span>`;
@@ -573,7 +583,7 @@
                 tbody.innerHTML += rowHTML;
             });
 
-            // Guardar en LocalStorage
+            // Guardar de forma local
             try {
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state.categories));
             } catch (err) {
@@ -630,7 +640,7 @@
             if (totalDeficit > 0) {
                 advTitle.innerText = "⚠️ Advertencia de Saldos Faltantes";
                 let listNames = categoriesWithDeficit.map(c => `<strong>${c.name}</strong> (Faltante: ${formatPEN(c.val)})`).join(', ');
-                advAdvice.innerHTML = `Tu saldo disponible no cubre el presupuesto restante. Registras una brecha total de ${formatPEN(totalDeficit)}. Se recomienda inyectar saldo a tus cuentas en: ${listNames}.`;
+                advAdvice.innerHTML = `Tu saldo disponible no cubre el presupuesto restante. Registras una brecha de ${formatPEN(totalDeficit)}. Se recomienda inyectar saldo a tus cuentas en: ${listNames}.`;
             } else {
                 advTitle.innerText = "🟢 Estado Financiero Saludable";
                 advAdvice.innerHTML = `¡Fabuloso! Tu saldo actual en tarjeta cubre con exactitud matemática el consumo diario proyectado para lo que resta del período. Mantén este ritmo de gasto.`;
@@ -712,6 +722,13 @@
             ];
             const chosenColors = colorsList[Math.floor(Math.random() * colorsList.length)];
 
+            // Obtener fecha del sistema local de manera dinámica
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+
             state.categories.push({
                 id: 'cat_' + Date.now(),
                 name: name,
@@ -719,7 +736,7 @@
                 headerColor: chosenColors.hColor,
                 daysType: type,
                 start: start,
-                actual: '2026-07-11',
+                actual: todayStr,
                 end: end,
                 income: income,
                 saldoTarjeta: saldo
@@ -738,23 +755,48 @@
         /* Restablecer al estado original */
         function resetToExcelDefaults() {
             state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+            
+            // Forzar fecha de hoy al resetear
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+            
+            state.categories.forEach(cat => {
+                cat.actual = todayStr;
+            });
+
             renderDashboard();
             showNotification("Datos restablecidos al estado original del Excel.");
         }
 
         window.onload = function() {
+            // Inicialización de la base de datos local
             initApp();
+
+            // EXTRACCIÓN DE FECHA LOCAL ESTRICTA (Protegido contra desfases GMT/UTC del servidor)
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`; // Resultado exacto: "2026-07-12"
+
+            // Actualizar la placa superior en el Header de forma automática
+            const formattedDateBadge = `${dd}/${mm}/${yyyy}`; // Resultado exacto: "12/07/2026"
+            const badgeEl = document.getElementById('current-date-badge');
+            if (badgeEl) {
+                badgeEl.innerText = formattedDateBadge;
+            }
+
+            // Inyectar AUTOMÁTICAMENTE la fecha actual de hoy en todas las categorías cargadas
+            state.categories.forEach(cat => {
+                cat.actual = todayStr;
+            });
+
+            // Renderizar el Dashboard contable
             renderDashboard();
         }
     </script>
 </body>
 </html>
-```
-eof
-
-### ✅ ¿Qué hice para que esta versión funcione perfectamente en Vercel?
-1. **Limpiador Anticaídas de Datos:** Si antes cargaste el sitio y tenías en memoria del navegador una versión diferente del cuadro que daba error, el sistema detectará el conflicto y lo corregirá automáticamente cargando los datos limpios.
-2. **Defensas contra valores vacíos (`null`/`undefined`):** Si falta alguna fecha o algún saldo se deforma, el código no se detendrá ni se romperá la visualización de la web, sino que utilizará valores por defecto de resguardo (fallback) inteligentes.
-3. **Guardado como `index.html`:** Recuerda eliminar cualquier otro archivo de prueba que tengas en tu repositorio de GitHub para evitar confusión de ruteo de Vercel. Este archivo debe ser el **único** archivo principal.
-
-¡Sube este nuevo código y verás que cargará de inmediato en `gastos-jet-dos.vercel.app`!
