@@ -105,11 +105,11 @@
             </div>
         </header>
 
-        <!-- Módulo del Asesor Inteligente -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Módulo del Asesor Inteligente (Ancho Completo Premium) -->
+        <section class="w-full">
             
             <!-- Diagnóstico Financiero Automatizado -->
-            <div class="lg:col-span-2 glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
                 <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
                 <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl"></div>
                 
@@ -146,23 +146,6 @@
                         <p class="text-xs text-slate-400">Faltante Neto</p>
                         <p class="text-lg font-bold text-rose-400" id="total-deficit-stat">S/ 0.00</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- Acciones de Control -->
-            <div class="glass-panel p-6 rounded-2xl flex flex-col justify-between gap-4">
-                <div>
-                    <h3 class="font-bold text-lg text-white mb-2"><i class="fa-solid fa-gears text-emerald-400 mr-2"></i>Herramientas de Control</h3>
-                    <p class="text-xs text-slate-400 mb-4">Crea nuevas columnas de gasto o restablece tu libro contable al estado inicial del Excel en un clic.</p>
-                </div>
-                
-                <div class="space-y-3">
-                    <button onclick="openAddCategoryModal()" class="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all duration-200 flex items-center justify-center gap-2 text-sm">
-                        <i class="fa-solid fa-plus"></i> Añadir Columna de Gasto
-                    </button>
-                    <button onclick="resetToExcelDefaults()" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 text-sm">
-                        <i class="fa-solid fa-rotate-left text-slate-400"></i> Cargar Datos Originales (Excel)
-                    </button>
                 </div>
             </div>
         </section>
@@ -205,69 +188,12 @@
 
         <!-- Pie de página -->
         <footer class="text-center py-4 text-xs text-slate-500 flex justify-between items-center px-4">
-            <p>© 2026 Asesor Financiero Personal. Tus datos se guardan automáticamente de forma local.</p>
+            <p>© 2026 Asesor Financiero Personal. Todos los cálculos están automatizados.</p>
             <div class="flex gap-4">
-                <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Conectado</span>
+                <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Sistema de Control Activo</span>
             </div>
         </footer>
 
-    </div>
-
-    <!-- Modal para Añadir Categorías -->
-    <div id="add-category-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden transition-all duration-300 opacity-0">
-        <div class="glass-panel rounded-2xl w-full max-w-md p-6 border border-slate-700/60 shadow-2xl transform scale-95 transition-all duration-300" id="modal-card">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-folder-plus text-emerald-400"></i> Nueva Columna Financiera
-                </h3>
-                <button onclick="closeAddCategoryModal()" class="text-slate-400 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nombre del Gasto / Categoría</label>
-                    <input type="text" id="new-cat-name" placeholder="Ej: PASAJES, MENÚ" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm">
-                </div>
-                
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Comportamiento del Calendario</label>
-                    <select id="new-cat-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm">
-                        <option value="working">Lunes a Viernes (Excluye Fines de Semana)</option>
-                        <option value="all">Todos los Días (Calendario Completo)</option>
-                        <option value="saturday">Solo Sábados</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Fecha Inicio</label>
-                        <input type="date" id="new-cat-start" value="2026-06-22" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Fecha Término</label>
-                        <input type="date" id="new-cat-end" value="2026-07-22" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition text-sm">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Presupuesto Inicial (S/)</label>
-                        <input type="number" id="new-cat-income" placeholder="77.00" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Saldo Inicial Tarjeta (S/)</label>
-                        <input type="number" id="new-cat-saldo" placeholder="42.00" step="0.01" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition text-sm">
-                    </div>
-                </div>
-
-                <div class="pt-4 flex justify-end gap-3">
-                    <button onclick="closeAddCategoryModal()" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-sm font-semibold">Cancelar</button>
-                    <button onclick="saveNewCategory()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold transition text-sm">Añadir Columna</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Script de lógica de negocio y cálculos financieros -->
@@ -281,10 +207,10 @@
                 headerColor: 'bg-emerald-500 text-slate-950',
                 daysType: 'working', /* Lunes a Viernes únicamente */
                 start: '2026-06-22',
-                actual: '2026-07-12', /* Domingo de control real */
+                actual: '2026-07-12', /* Sábado/Domingo de control */
                 end: '2026-07-22',
                 income: 77.00,
-                saldoTarjeta: 10.00
+                saldoTarjeta: 42.00
             },
             {
                 id: 'cat_desayuno',
@@ -296,7 +222,7 @@
                 actual: '2026-07-12',
                 end: '2026-07-22',
                 income: 319.00,
-                saldoTarjeta: 81.00
+                saldoTarjeta: 174.00
             },
             {
                 id: 'cat_saba',
@@ -308,57 +234,69 @@
                 actual: '2026-07-12',
                 end: '2026-07-22',
                 income: 48.00,
-                saldoTarjeta: 12.00
+                saldoTarjeta: 0.00
             }
         ];
 
         /* Inicialización Segura del Estado (Previene caídas por datos corruptos en Local Storage) */
         let state = { categories: [] };
-        const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v9';
+        const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v6';
+
+        /* Función para obtener la fecha de hoy en huso local del dispositivo */
+        function getLocalDateString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        /* Formatea la fecha de YYYY-MM-DD a DD/MM/YYYY */
+        function formatDateToDisplay(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
 
         function initApp() {
             try {
                 const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                let parsed = null;
                 if (storedData) {
-                    const parsed = JSON.parse(storedData);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        /* Sanitizar y reconstruir propiedades para evitar valores undefined o nulos */
-                        state.categories = parsed.map(cat => ({
-                            id: cat.id || 'cat_' + Math.random(),
-                            name: (cat.name || 'SIN NOMBRE').toUpperCase(),
-                            color: cat.color || 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
-                            headerColor: cat.headerColor || 'bg-emerald-500 text-slate-950',
-                            daysType: cat.daysType || 'working',
-                            start: cat.start || '2026-06-22',
-                            actual: cat.actual || '2026-07-12',
-                            end: cat.end || '2026-07-22',
-                            income: parseFloat(cat.income) || 0,
-                            saldoTarjeta: parseFloat(cat.saldoTarjeta) || 0
-                        }));
-                    } else {
-                        state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-                    }
-                } else {
-                    state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+                    parsed = JSON.parse(storedData);
+                }
+
+                // Fijamos la estructura exacta de las 3 categorías por defecto
+                state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+
+                // Si hay datos locales, los restauramos de forma segura para las categorías válidas
+                if (Array.isArray(parsed)) {
+                    parsed.forEach(savedCat => {
+                        const target = state.categories.find(c => c.id === savedCat.id);
+                        if (target) {
+                            if (savedCat.start) target.start = savedCat.start;
+                            if (savedCat.end) target.end = savedCat.end;
+                            if (savedCat.income !== undefined) target.income = parseFloat(savedCat.income) || 0;
+                            if (savedCat.saldoTarjeta !== undefined) target.saldoTarjeta = parseFloat(savedCat.saldoTarjeta) || 0;
+                        }
+                    });
                 }
             } catch (e) {
-                console.warn("Se detectó un error en los datos anteriores. Limpiando y restableciendo defaults...", e);
-                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                console.warn("Se restablecieron defaults seguros.", e);
                 state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
             }
-        }
 
-        function showNotification(message) {
-            const notif = document.getElementById('custom-notification');
-            const text = document.getElementById('notification-text');
-            if (notif && text) {
-                text.innerText = message;
-                notif.classList.remove('translate-y-20', 'opacity-0');
-                notif.classList.add('translate-y-0', 'opacity-100');
-                setTimeout(() => {
-                    notif.classList.remove('translate-y-0', 'opacity-100');
-                    notif.classList.add('translate-y-20', 'opacity-0');
-                }, 3500);
+            // Sincronizar fecha actual de forma 100% automática a hoy
+            const todayStr = getLocalDateString();
+            state.categories.forEach(cat => {
+                cat.actual = todayStr;
+            });
+
+            // Actualizar la placa superior
+            const badge = document.getElementById('current-date-badge');
+            if (badge) {
+                badge.innerText = formatDateToDisplay(todayStr);
             }
         }
 
@@ -429,72 +367,52 @@
             return `${isNegative ? '-' : ''}S/ ${absVal}`;
         }
 
-        /* Renderizado completo e impecable de las filas y columnas estilo Excel */
-        function renderDashboard() {
+        /* Construye la estructura visual de la tabla por única vez */
+        function buildStaticTable() {
             const headerRow = document.getElementById('table-header-row');
             const tbody = document.getElementById('spreadsheet-body');
             
             if (!headerRow || !tbody) return;
 
-            // 1. Renderizar Headers de Columnas
+            // 1. Cabeceras
             let headerHTML = `
                 <th class="p-4 font-bold text-[11px] uppercase tracking-wider text-slate-400 w-1/5 min-w-[200px]">
                     INDICADOR / CUENTA
                 </th>
             `;
             
-            state.categories.forEach((cat, index) => {
+            state.categories.forEach((cat) => {
                 headerHTML += `
                     <th class="p-4 text-center font-bold relative group w-52 min-w-[180px]">
                         <div class="px-3 py-1.5 rounded-lg inline-flex items-center gap-2 ${cat.headerColor || 'bg-slate-800 text-white'} text-[11px] font-black shadow-md uppercase tracking-wider">
                             <span>${cat.name}</span>
-                            <button onclick="removeCategory(${index})" class="text-slate-950/60 hover:text-slate-950 transition ml-1" title="Eliminar Columna">
-                                <i class="fa-solid fa-circle-xmark"></i>
-                            </button>
                         </div>
                     </th>
                 `;
             });
 
-            // Columna de Totales
             headerHTML += `
                 <th class="p-4 font-bold text-[11px] uppercase tracking-wider text-slate-200 bg-slate-900 w-44 text-center min-w-[160px]">
                     TOTALES
                 </th>
             `;
-            
             headerRow.innerHTML = headerHTML;
 
-            // 2. Fórmulas y especificación de filas según el Excel de referencia
+            // 2. Filas de Configuración
             const rowsConfig = [
-                { id: 'cuantos_dias', label: 'CUANTOS DIAS', icon: 'fa-hourglass-half', calc: (c) => calculateCalendarDaysRemaining(c.actual, c.end), isCalculated: true, labelClass: 'text-slate-400 font-semibold', hideTotal: true },
+                { id: 'cuantos_dias', label: 'CUANTOS DIAS', icon: 'fa-hourglass-half', isCalculated: true, labelClass: 'text-slate-400 font-semibold', hideTotal: true },
                 { id: 'fecha_inicio', label: 'FECHA DE INICIO', icon: 'fa-calendar-plus', isDate: true, key: 'start', hideTotal: true },
                 { id: 'fecha_actual', label: 'FECHA ACTUAL', icon: 'fa-calendar-day', isDate: true, key: 'actual', hideTotal: true },
                 { id: 'fecha_termino', label: 'FECHA DE TERMINO', icon: 'fa-calendar-check', isDate: true, key: 'end', labelClass: 'text-rose-400 font-bold', hideTotal: true },
                 { id: 'ingreso_gasto', label: 'INGRESO GASTO', icon: 'fa-money-bill-wave', isNumber: true, key: 'income', rowClass: 'bg-slate-900/30', labelClass: 'text-red-500 font-black' },
-                { id: 'gasto_por_dia', label: 'GASTO POR DIA', icon: 'fa-calculator', calc: (c) => {
-                    const totalPeriodDays = calculateDaysByMode(c.start, c.end, c.daysType, false);
-                    return totalPeriodDays > 0 ? (c.income / totalPeriodDays) : 0;
-                }, isCalculated: true, format: true },
-                { id: 'resultado_saldo', label: 'RESULTADO SALDO', icon: 'fa-chart-pie', calc: (c) => {
-                    const remainingDays = calculateDaysByMode(c.actual, c.end, c.daysType, true);
-                    const totalPeriodDays = calculateDaysByMode(c.start, c.end, c.daysType, false);
-                    const dailyRate = totalPeriodDays > 0 ? (c.income / totalPeriodDays) : 0;
-                    return remainingDays * dailyRate;
-                }, isCalculated: true, format: true, rowClass: 'bg-amber-500/10 border-amber-500/20', labelClass: 'text-amber-400 font-bold' },
+                { id: 'gasto_por_dia', label: 'GASTO POR DIA', icon: 'fa-calculator', isCalculated: true, format: true },
+                { id: 'resultado_saldo', label: 'RESULTADO SALDO', icon: 'fa-chart-pie', isCalculated: true, format: true, rowClass: 'bg-amber-500/10 border-amber-500/20', labelClass: 'text-amber-400 font-bold' },
                 { id: 'saldo_tarjeta', label: 'SALDO TARJETA', icon: 'fa-credit-card', isNumber: true, key: 'saldoTarjeta', rowClass: 'glow-red-border border-2 bg-rose-950/20 my-2 rounded-xl transition-all duration-300', labelClass: 'text-rose-400 font-black tracking-wide' },
-                { id: 'faltante', label: 'FALTANTE', icon: 'fa-circle-exclamation', calc: (c) => {
-                    const remainingDays = calculateDaysByMode(c.actual, c.end, c.daysType, true);
-                    const totalPeriodDays = calculateDaysByMode(c.start, c.end, c.daysType, false);
-                    const dailyRate = totalPeriodDays > 0 ? (c.income / totalPeriodDays) : 0;
-                    const resultBudget = remainingDays * dailyRate;
-                    return resultBudget - c.saldoTarjeta;
-                }, isCalculated: true, format: true, labelClass: 'text-slate-300 font-black' }
+                { id: 'faltante', label: 'FALTANTE', icon: 'fa-circle-exclamation', isCalculated: true, format: true, labelClass: 'text-slate-300 font-black' }
             ];
 
             tbody.innerHTML = '';
 
-            // 3. Renderizado fila por fila
             rowsConfig.forEach((rowSpec) => {
                 let rowHTML = `<tr class="border-b border-slate-800/40 hover:bg-slate-900/20 transition-colors ${rowSpec.rowClass || ''}">`;
                 
@@ -506,15 +424,14 @@
                     </td>
                 `;
 
-                let totalAcumulado = 0;
-
-                // Renderizar columnas de categorías correspondientes
+                // Columnas por categoría
                 state.categories.forEach((cat, cIdx) => {
                     if (rowSpec.isDate) {
                         rowHTML += `
                             <td class="p-3 text-center">
                                 <div class="relative inline-block w-full max-w-[170px]">
                                     <input type="date" value="${cat[rowSpec.key]}" 
+                                        id="input-${rowSpec.id}-${cIdx}"
                                         onchange="updateValue(${cIdx}, '${rowSpec.key}', this.value)" 
                                         class="bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-lg px-2.5 py-1.5 text-center text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-full transition cursor-pointer">
                                 </div>
@@ -528,274 +445,175 @@
                                 <div class="relative inline-flex items-center w-full max-w-[150px] rounded-lg bg-slate-950 border ${isTarjeta ? 'border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/30' : 'border-slate-800 focus-within:border-slate-700'}">
                                     <span class="pl-2.5 text-xs text-slate-500 font-bold select-none">S/</span>
                                     <input type="number" step="0.01" value="${numericVal}" 
-                                        onchange="updateValue(${cIdx}, '${rowSpec.key}', parseFloat(this.value) || 0)" 
-                                        onblur="this.value = parseFloat(this.value || 0).toFixed(2)"
+                                        id="input-${rowSpec.id}-${cIdx}"
+                                        oninput="updateNumericValue(${cIdx}, '${rowSpec.key}', this.value)" 
+                                        onblur="formatNumericInput(this)"
                                         class="bg-transparent border-none text-right px-2.5 py-1.5 text-xs text-white font-black w-full focus:outline-none">
                                 </div>
                             </td>
                         `;
-                        totalAcumulado += parseFloat(cat[rowSpec.key]) || 0;
                     } else if (rowSpec.isCalculated) {
-                        const calculatedVal = rowSpec.calc(cat);
-                        totalAcumulado += calculatedVal;
-                        
-                        let cellContent = '';
-                        if (rowSpec.format) {
-                            if (rowSpec.id === 'faltante') {
-                                /* Semáforo financiero reactivo y vibrante (Rojo cuando falta, Verde cuando sobra) */
-                                const hasDeficit = calculatedVal > 0;
-                                const glowClass = hasDeficit ? 'text-glow-red font-extrabold animate-pulse' : 'text-glow-green font-extrabold';
-                                cellContent = `<span class="${glowClass}">${formatPEN(calculatedVal)}</span>`;
-                            } else {
-                                cellContent = `<span class="font-bold text-slate-200">${formatPEN(calculatedVal)}</span>`;
-                            }
-                        } else {
-                            cellContent = `<span class="font-bold text-slate-300">${calculatedVal}</span>`;
-                        }
-
-                        rowHTML += `<td class="p-3 text-center">${cellContent}</td>`;
+                        rowHTML += `<td class="p-3 text-center text-xs font-bold" id="calc-${rowSpec.id}-${cIdx}">-</td>`;
                     }
                 });
 
-                // Renderizar Columna de "TOTALES"
-                let totalDisplay = '';
-                if (rowSpec.hideTotal) {
-                    totalDisplay = '<span class="text-slate-600">-</span>';
-                } else if (rowSpec.format || rowSpec.isNumber) {
-                    if (rowSpec.id === 'faltante') {
-                        const hasDeficit = totalAcumulado > 0;
-                        const glowClass = hasDeficit ? 'text-glow-red font-black' : 'text-glow-green font-black';
-                        totalDisplay = `<span class="${glowClass}">${formatPEN(totalAcumulado)}</span>`;
-                    } else {
-                        totalDisplay = `<span class="font-black text-white">${formatPEN(totalAcumulado)}</span>`;
-                    }
-                } else {
-                    totalDisplay = `<span class="font-bold text-slate-300">${totalAcumulado}</span>`;
-                }
-
+                // Columna total
+                let totalIdAttr = rowSpec.hideTotal ? '' : `id="total-val-${rowSpec.id}"`;
                 rowHTML += `
-                    <td class="p-4 text-center bg-slate-950/50 font-black border-l border-slate-800">
-                        ${totalDisplay}
+                    <td ${totalIdAttr} class="p-4 text-center bg-slate-950/50 font-black border-l border-slate-800 text-xs">
+                        -
                     </td>
                 `;
 
                 rowHTML += `</tr>`;
                 tbody.innerHTML += rowHTML;
             });
-
-            // Guardar de forma local
-            try {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state.categories));
-            } catch (err) {
-                console.error("Error guardando datos en LocalStorage", err);
-            }
-            
-            // Actualizar asesor y métricas superiores
-            updateAdvisorMetrics();
         }
 
-        /* Algoritmo de diagnóstico financiero en base a saldos vigentes */
-        function updateAdvisorMetrics() {
-            let totalIncome = 0;
-            let totalCard = 0;
-            let totalDeficit = 0;
-            let categoriesWithDeficit = [];
+        /* Actualiza y recalcula únicamente el contenido de texto (mantiene el cursor activo y evita saltos de pantalla) */
+        function recalculateAll() {
+            let totals = {
+                income: 0,
+                gasto_por_dia: 0,
+                resultado_saldo: 0,
+                saldoTarjeta: 0,
+                faltante: 0
+            };
 
-            state.categories.forEach(cat => {
-                totalIncome += cat.income;
-                totalCard += cat.saldoTarjeta;
-
-                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
+            state.categories.forEach((cat, cIdx) => {
+                // Cálculo de días calendario e individuales
+                const cuantos_dias = calculateCalendarDaysRemaining(cat.actual, cat.end);
+                
                 const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
-                const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
-                const resultBudget = remainingDays * dailyRate;
-                const deficit = resultBudget - cat.saldoTarjeta;
+                const gasto_por_dia = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
+                
+                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
+                const resultado_saldo = remainingDays * gasto_por_dia;
+                
+                const saldo_tarjeta = cat.saldoTarjeta;
+                const faltante = resultado_saldo - saldo_tarjeta;
 
-                if (deficit > 0) {
-                    totalDeficit += deficit;
-                    categoriesWithDeficit.push({ name: cat.name, val: deficit });
+                // Inyección de textos a celdas calculadas
+                const elCuantos = document.getElementById(`calc-cuantos_dias-${cIdx}`);
+                if (elCuantos) elCuantos.innerHTML = `<span class="font-bold text-slate-300">${cuantos_dias}</span>`;
+
+                const elGastoDia = document.getElementById(`calc-gasto_por_dia-${cIdx}`);
+                if (elGastoDia) elGastoDia.innerHTML = `<span class="font-bold text-slate-200">${formatPEN(gasto_por_dia)}</span>`;
+
+                const elResSaldo = document.getElementById(`calc-resultado_saldo-${cIdx}`);
+                if (elResSaldo) elResSaldo.innerHTML = `<span class="font-bold text-slate-200">${formatPEN(resultado_saldo)}</span>`;
+
+                const elFaltante = document.getElementById(`calc-faltante-${cIdx}`);
+                if (elFaltante) {
+                    const hasDeficit = faltante > 0;
+                    const glowClass = hasDeficit ? 'text-glow-red font-extrabold animate-pulse' : 'text-glow-green font-extrabold';
+                    elFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(faltante)}</span>`;
                 }
+
+                // Sumarizadores globales
+                totals.income += cat.income;
+                totals.gasto_por_dia += gasto_por_dia;
+                totals.resultado_saldo += resultado_saldo;
+                totals.saldoTarjeta += saldo_tarjeta;
+                totals.faltante += faltante;
             });
 
-            // Actualizar Tarjetas de Estadísticas
+            // Actualizar la columna Totales
+            const tIncome = document.getElementById('total-val-ingreso_gasto');
+            if (tIncome) tIncome.innerHTML = `<span class="font-black text-white">${formatPEN(totals.income)}</span>`;
+
+            const tGasto = document.getElementById('total-val-gasto_por_dia');
+            if (tGasto) tGasto.innerHTML = `<span class="font-black text-white">${formatPEN(totals.gasto_por_dia)}</span>`;
+
+            const tRes = document.getElementById('total-val-resultado_saldo');
+            if (tRes) tRes.innerHTML = `<span class="font-black text-white">${formatPEN(totals.resultado_saldo)}</span>`;
+
+            const tTarjeta = document.getElementById('total-val-saldo_tarjeta');
+            if (tTarjeta) tTarjeta.innerHTML = `<span class="font-black text-white">${formatPEN(totals.saldoTarjeta)}</span>`;
+
+            const tFaltante = document.getElementById('total-val-faltante');
+            if (tFaltante) {
+                const hasDeficit = totals.faltante > 0;
+                const glowClass = hasDeficit ? 'text-glow-red font-black' : 'text-glow-green font-black';
+                tFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(totals.faltante)}</span>`;
+            }
+
+            // Actualizar tarjetas de métricas superiores
             const elInc = document.getElementById('total-income-stat');
             const elCrd = document.getElementById('total-card-stat');
             const elDef = document.getElementById('total-deficit-stat');
             
-            if (elInc) elInc.innerText = formatPEN(totalIncome);
-            if (elCrd) elCrd.innerText = formatPEN(totalCard);
-            if (elDef) elDef.innerText = formatPEN(totalDeficit);
+            if (elInc) elInc.innerText = formatPEN(totals.income);
+            if (elCrd) elCrd.innerText = formatPEN(totals.saldoTarjeta);
 
+            // Calcular el faltante total neto real (solo de los ítems en déficit)
+            let sumDeficitOnly = 0;
+            let categoriesWithDeficit = [];
+            state.categories.forEach(cat => {
+                const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
+                const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
+                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
+                const resultBudget = remainingDays * dailyRate;
+                const deficit = resultBudget - cat.saldoTarjeta;
+
+                if (deficit > 0) {
+                    sumDeficitOnly += deficit;
+                    categoriesWithDeficit.push({ name: cat.name, val: deficit });
+                }
+            });
+
+            if (elDef) elDef.innerText = formatPEN(sumDeficitOnly);
+
+            // Actualizar panel de asesor inteligente
             const advTitle = document.getElementById('advisor-title');
             const advAdvice = document.getElementById('advisor-advice');
 
-            if (!advTitle || !advAdvice) return;
-
-            if (state.categories.length === 0) {
-                advTitle.innerText = "No hay columnas de control activas";
-                advAdvice.innerText = "Agrega una nueva columna de gasto o haz clic en 'Cargar Datos Originales' para analizar tus finanzas.";
-                return;
+            if (advTitle && advAdvice) {
+                if (sumDeficitOnly > 0) {
+                    advTitle.innerText = "⚠️ Advertencia de Saldos Faltantes";
+                    let listNames = categoriesWithDeficit.map(c => `<strong>${c.name}</strong> (Faltante: ${formatPEN(c.val)})`).join(', ');
+                    advAdvice.innerHTML = `Tu saldo disponible no cubre el presupuesto restante. Registras una brecha de ${formatPEN(sumDeficitOnly)}. Se recomienda inyectar saldo a tus cuentas en: ${listNames}.`;
+                } else {
+                    advTitle.innerText = "🟢 Estado Financiero Saludable";
+                    advAdvice.innerHTML = `¡Fabuloso! Tu saldo actual en tarjeta cubre con exactitud matemática el consumo diario proyectado para lo que resta del período. Mantén este ritmo de gasto.`;
+                }
             }
 
-            if (totalDeficit > 0) {
-                advTitle.innerText = "⚠️ Advertencia de Saldos Faltantes";
-                let listNames = categoriesWithDeficit.map(c => `<strong>${c.name}</strong> (Faltante: ${formatPEN(c.val)})`).join(', ');
-                advAdvice.innerHTML = `Tu saldo disponible no cubre el presupuesto restante. Registras una brecha de ${formatPEN(totalDeficit)}. Se recomienda inyectar saldo a tus cuentas en: ${listNames}.`;
-            } else {
-                advTitle.innerText = "🟢 Estado Financiero Saludable";
-                advAdvice.innerHTML = `¡Fabuloso! Tu saldo actual en tarjeta cubre con exactitud matemática el consumo diario proyectado para lo que resta del período. Mantén este ritmo de gasto.`;
+            // Guardar al milisegundo en localStorage de forma 100% segura
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state.categories));
+            } catch (err) {
+                console.error("No se pudo escribir en LocalStorage:", err);
             }
         }
 
-        /* Función para cambiar valores directamente de las celdas */
+        /* Actualización inmediata del estado en memoria y del almacenamiento local al escribir */
+        function updateNumericValue(categoryIndex, key, valString) {
+            const numericValue = parseFloat(valString) || 0;
+            if (state.categories[categoryIndex]) {
+                state.categories[categoryIndex][key] = numericValue;
+                recalculateAll(); // Actualización visual ultra-rápida en tiempo real
+            }
+        }
+
+        /* Formateador visual que agrega dos decimales al perder el foco */
+        function formatNumericInput(inputEl) {
+            const val = parseFloat(inputEl.value) || 0;
+            inputEl.value = val.toFixed(2);
+        }
+
+        /* Manejo de cambio en los calendarios editables */
         function updateValue(categoryIndex, key, value) {
             if (state.categories[categoryIndex]) {
                 state.categories[categoryIndex][key] = value;
-                renderDashboard();
+                recalculateAll();
             }
-        }
-
-        /* Eliminar categorías existentes */
-        function removeCategory(index) {
-            if (state.categories[index]) {
-                const name = state.categories[index].name;
-                state.categories.splice(index, 1);
-                renderDashboard();
-                showNotification(`Columna "${name}" eliminada.`);
-            }
-        }
-
-        /* Modales interactivos */
-        function openAddCategoryModal() {
-            const modal = document.getElementById('add-category-modal');
-            const card = document.getElementById('modal-card');
-            if (modal && card) {
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.add('opacity-100');
-                    card.classList.remove('scale-95');
-                    card.classList.add('scale-100');
-                }, 15);
-            }
-        }
-
-        function closeAddCategoryModal() {
-            const modal = document.getElementById('add-category-modal');
-            const card = document.getElementById('modal-card');
-            if (modal && card) {
-                modal.classList.remove('opacity-100');
-                card.classList.remove('scale-100');
-                card.classList.add('scale-95');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300);
-            }
-        }
-
-        /* Crear nueva columna desde el Modal */
-        function saveNewCategory() {
-            const nameInput = document.getElementById('new-cat-name');
-            const typeInput = document.getElementById('new-cat-type');
-            const startInput = document.getElementById('new-cat-start');
-            const endInput = document.getElementById('new-cat-end');
-            const incomeInput = document.getElementById('new-cat-income');
-            const saldoInput = document.getElementById('new-cat-saldo');
-
-            if (!nameInput || !nameInput.value.trim()) {
-                showNotification("¡Por favor, asigna un nombre para la categoría!");
-                return;
-            }
-
-            const name = nameInput.value.trim().toUpperCase();
-            const type = typeInput ? typeInput.value : 'working';
-            const start = startInput ? startInput.value : '2026-06-22';
-            const end = endInput ? endInput.value : '2026-07-22';
-            const income = parseFloat(incomeInput ? incomeInput.value : 0) || 0;
-            const saldo = parseFloat(saldoInput ? saldoInput.value : 0) || 0;
-
-            const colorsList = [
-                { color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40', hColor: 'bg-emerald-500 text-slate-950' },
-                { color: 'bg-amber-500/20 text-amber-300 border-amber-500/40', hColor: 'bg-amber-400 text-slate-950' },
-                { color: 'bg-orange-500/20 text-orange-400 border-orange-500/40', hColor: 'bg-orange-500 text-slate-950' },
-                { color: 'bg-sky-500/20 text-sky-400 border-sky-500/40', hColor: 'bg-sky-500 text-slate-950' },
-                { color: 'bg-purple-500/20 text-purple-400 border-purple-500/40', hColor: 'bg-purple-500 text-slate-950' }
-            ];
-            const chosenColors = colorsList[Math.floor(Math.random() * colorsList.length)];
-
-            // Obtener fecha del sistema local de manera dinámica
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const todayStr = `${yyyy}-${mm}-${dd}`;
-
-            state.categories.push({
-                id: 'cat_' + Date.now(),
-                name: name,
-                color: chosenColors.color,
-                headerColor: chosenColors.hColor,
-                daysType: type,
-                start: start,
-                actual: todayStr,
-                end: end,
-                income: income,
-                saldoTarjeta: saldo
-            });
-
-            // Limpieza de inputs
-            nameInput.value = '';
-            if (incomeInput) incomeInput.value = '';
-            if (saldoInput) saldoInput.value = '';
-
-            closeAddCategoryModal();
-            renderDashboard();
-            showNotification(`¡Columna "${name}" creada correctamente!`);
-        }
-
-        /* Restablecer al estado original */
-        function resetToExcelDefaults() {
-            state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-            
-            // Forzar fecha de hoy al resetear
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const todayStr = `${yyyy}-${mm}-${dd}`;
-            
-            state.categories.forEach(cat => {
-                cat.actual = todayStr;
-            });
-
-            renderDashboard();
-            showNotification("Datos restablecidos al estado original del Excel.");
         }
 
         window.onload = function() {
-            // Inicialización de la base de datos local
             initApp();
-
-            // EXTRACCIÓN DE FECHA LOCAL ESTRICTA (Protegido contra desfases GMT/UTC del servidor)
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const todayStr = `${yyyy}-${mm}-${dd}`; // Resultado exacto: "2026-07-12"
-
-            // Actualizar la placa superior en el Header de forma automática
-            const formattedDateBadge = `${dd}/${mm}/${yyyy}`; // Resultado exacto: "12/07/2026"
-            const badgeEl = document.getElementById('current-date-badge');
-            if (badgeEl) {
-                badgeEl.innerText = formattedDateBadge;
-            }
-
-            // Inyectar AUTOMÁTICAMENTE la fecha actual de hoy en todas las categorías cargadas
-            state.categories.forEach(cat => {
-                cat.actual = todayStr;
-            });
-
-            // Renderizar el Dashboard contable
-            renderDashboard();
+            buildStaticTable();
+            recalculateAll();
         }
     </script>
 </body>
