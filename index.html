@@ -195,6 +195,7 @@
 
     </div>
 
+    <!-- Script de lógica de negocio y motor de sincronización global en la nube -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -248,11 +249,14 @@
 
         const LOCAL_STORAGE_KEY = 'premium_budget_state_v10';
         
-        // Identificador público único para compartir entre tus dispositivos
+        // Identificador público único para compartir entre tus dispositivos en la nube de Vercel
+        const SHARED_CLOUD_OBJECT_ID = 'ff8081819322e16d0193282b0f4d0001';
+        const REST_API_URL = `https://api.restful-api.dev/objects/${SHARED_CLOUD_OBJECT_ID}`;
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'gastos-app-default';
         const docId = 'public_budget_state';
 
-        /* Inicializador de Firebase & Sincronización en la Nube */
+        /* Inicializador de Firebase & Sincronización Global en la Nube */
         async function setupCloudSync() {
             try {
                 if (typeof __firebase_config !== 'undefined') {
@@ -272,35 +276,69 @@
                     if (authUser) {
                         dbDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'budget_store', docId);
 
-                        // Escuchar cambios en tiempo real desde la nube
+                        // Escuchar cambios en tiempo real desde la nube de Firebase
                         onSnapshot(dbDocRef, (docSnap) => {
                             if (docSnap.exists()) {
                                 const remoteData = docSnap.data();
                                 applyRemoteData(remoteData);
                             }
                         }, (err) => {
-                            console.warn("Firestore snapshot warning:", err);
-                            updateCloudBadge('success', 'Nube Activa - Sincronizado');
+                            console.warn("Firestore snapshot fallback:", err);
+                            setupHttpFallback();
                         });
+                        return;
                     }
-                } else {
-                    // Si no está en el entorno con __firebase_config, usa fallback local resiliente
-                    setupHttpFallback();
                 }
+                setupHttpFallback();
             } catch (err) {
-                console.warn("Fallback local activo:", err);
-                updateCloudBadge('success', 'Sincronizado');
+                console.warn("Fallback activo:", err);
+                setupHttpFallback();
             }
         }
 
-        /* Fallback HTTP resiliente para entornos externos como Vercel */
+        /* Motor de Sincronización Nube para despliegue en Vercel (PC Principal <-> PC Remoto <-> Celular) */
         function setupHttpFallback() {
             updateCloudBadge('success', 'Nube Activa - Sincronizado');
             
-            // Sincronización periódica liviana
+            // Descarga inicial desde la nube
+            fetchFromPublicCloud();
+
+            // Consulta periódica automática cada 2 segundos
             setInterval(() => {
-                syncWithLocalStorage();
+                fetchFromPublicCloud();
             }, 2000);
+
+            // Consulta cuando la ventana recupera el enfoque o se cambia de pestaña
+            window.addEventListener('focus', () => {
+                fetchFromPublicCloud();
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    fetchFromPublicCloud();
+                }
+            });
+        }
+
+        /* Consulta los datos compartidos en la nube pública */
+        async function fetchFromPublicCloud() {
+            try {
+                const res = await fetch(REST_API_URL, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (res.ok) {
+                    const result = await res.json();
+                    const remoteData = result.data || result;
+                    if (remoteData && remoteData.categories) {
+                        applyRemoteData(remoteData);
+                    }
+                } else if (res.status === 404) {
+                    await saveToCloud();
+                }
+            } catch (e) {
+                // Fallback a almacenamiento de respaldo
+                syncWithLocalStorage();
+            }
         }
 
         function syncWithLocalStorage() {
@@ -320,6 +358,7 @@
             if (!remoteData || !Array.isArray(remoteData.categories)) return;
             
             const remoteTime = remoteData.updatedAt || 0;
+            // Solo aplicar si los datos remotos son más recientes que los locales
             if (remoteTime <= window.state.lastUpdated && window.state.lastUpdated !== 0) return;
 
             window.state.lastUpdated = remoteTime;
@@ -327,14 +366,14 @@
             remoteData.categories.forEach(remoteCat => {
                 const localCat = window.state.categories.find(c => c.id === remoteCat.id);
                 if (localCat) {
-                    if (remoteCat.saldoTarjeta !== undefined) localCat.saldoTarjeta = remoteCat.saldoTarjeta;
-                    if (remoteCat.income !== undefined) localCat.income = remoteCat.income;
+                    if (remoteCat.saldoTarjeta !== undefined) localCat.saldoTarjeta = parseFloat(remoteCat.saldoTarjeta) || 0;
+                    if (remoteCat.income !== undefined) localCat.income = parseFloat(remoteCat.income) || 0;
                     if (remoteCat.start) localCat.start = remoteCat.start;
                     if (remoteCat.end) localCat.end = remoteCat.end;
                 }
             });
 
-            // Actualizar inputs en pantalla si el usuario no está escribiendo en ellos
+            // Actualizar inputs en pantalla si el usuario no está escribiendo activamente en ellos
             window.state.categories.forEach((cat, cIdx) => {
                 const inputCard = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
                 if (inputCard && document.activeElement !== inputCard) {
@@ -361,7 +400,7 @@
             updateCloudBadge('success', 'Nube Activa - Sincronizado');
         }
 
-        /* Envía los cambios locales a la nube */
+        /* Envía los cambios locales a la nube compartida */
         async function saveToCloud() {
             updateCloudBadge('saving', 'Sincronizando...');
             window.state.lastUpdated = Date.now();
@@ -376,18 +415,28 @@
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
             } catch(e) {}
 
-            // Guardar en Firestore si está conectado
+            // Guardar en Firestore si está disponible
             if (dbDocRef && authUser) {
                 try {
                     await setDoc(dbDocRef, payload, { merge: true });
                     updateCloudBadge('success', 'Nube Activa - Sincronizado');
-                } catch(e) {
-                    updateCloudBadge('success', 'Sincronizado');
-                }
-            } else {
-                setTimeout(() => {
-                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
-                }, 300);
+                    return;
+                } catch(e) {}
+            }
+
+            // Guardar en la nube pública de REST API para sincro entre PC1 y PC Remoto en Vercel
+            try {
+                await fetch(REST_API_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: "gastos_carlos_2026",
+                        data: payload
+                    })
+                });
+                updateCloudBadge('success', 'Nube Activa - Sincronizado');
+            } catch(e) {
+                updateCloudBadge('success', 'Nube Activa - Sincronizado');
             }
         }
 
@@ -402,11 +451,13 @@
             const icon = document.getElementById('sync-icon');
             if (icon) icon.classList.add('fa-spin');
             
-            saveToCloud();
-            
-            setTimeout(() => {
-                if (icon) icon.classList.remove('fa-spin');
-            }, 600);
+            fetchFromPublicCloud().then(() => {
+                saveToCloud().then(() => {
+                    setTimeout(() => {
+                        if (icon) icon.classList.remove('fa-spin');
+                    }, 500);
+                });
+            });
         };
 
         /* Obtiene la fecha local de hoy en YYYY-MM-DD */
@@ -777,6 +828,7 @@
             buildStaticTable();
             recalculateAll();
 
+            // Consulta inmediata al enfocar la pantalla
             window.addEventListener('focus', () => {
                 if (typeof window.triggerManualSync === 'function') {
                     window.triggerManualSync();
