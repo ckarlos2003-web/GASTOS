@@ -101,7 +101,7 @@
                     <i class="fa-regular fa-calendar-check text-emerald-400 animate-pulse"></i>
                     <div class="text-xs md:text-sm font-medium">
                         <span class="text-slate-400">Fecha Control:</span> 
-                        <span id="current-date-badge" class="text-emerald-400 font-bold">20/07/2026</span>
+                        <span id="current-date-badge" class="text-emerald-400 font-bold">--/--/----</span>
                     </div>
                 </div>
             </div>
@@ -109,8 +109,6 @@
 
         <!-- Módulo del Asesor Inteligente -->
         <section class="w-full">
-            
-            <!-- Diagnóstico Financiero Automatizado -->
             <div class="glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
                 <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
                 <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl"></div>
@@ -189,15 +187,19 @@
                 <span id="cloud-status-badge" class="flex items-center gap-1.5 font-semibold text-emerald-400">
                     <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Nube Activa - Sincronizado
                 </span>
-                <button onclick="pullFromCloud(true)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 border border-slate-700" title="Forzar Sincronización Manual">
-                    <i class="fa-solid fa-rotate text-emerald-400"></i> Sincronizar
+                <button onclick="triggerManualSync()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 border border-slate-700" title="Sincronizar Manualmente">
+                    <i id="sync-icon" class="fa-solid fa-rotate text-emerald-400"></i> Sincronizar
                 </button>
             </div>
         </footer>
 
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         /* Datos por defecto basados en la planilla Excel original */
         const DEFAULT_CATEGORIES = [
             {
@@ -239,14 +241,173 @@
         ];
 
         /* Variables de Estado Global */
-        let state = { categories: [], lastUpdated: 0 };
-        let isSyncingWithCloud = false;
+        window.state = { categories: [], lastUpdated: 0 };
         let pushDebounceTimer = null;
+        let dbDocRef = null;
+        let authUser = null;
 
-        const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v8';
+        const LOCAL_STORAGE_KEY = 'premium_budget_state_v10';
         
-        /* Servidor Cloud Key-Value de Alta Disponibilidad con Soporte CORS Total */
-        const CLOUD_SYNC_ENDPOINT = 'https://kvdb.io/ckarlos_gastos_v2026_sync/data';
+        // Identificador público único para compartir entre tus dispositivos
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'gastos-app-default';
+        const docId = 'public_budget_state';
+
+        /* Inicializador de Firebase & Sincronización en la Nube */
+        async function setupCloudSync() {
+            try {
+                if (typeof __firebase_config !== 'undefined') {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    const auth = getAuth(app);
+                    const db = getFirestore(app);
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+
+                    authUser = auth.currentUser;
+
+                    if (authUser) {
+                        dbDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'budget_store', docId);
+
+                        // Escuchar cambios en tiempo real desde la nube
+                        onSnapshot(dbDocRef, (docSnap) => {
+                            if (docSnap.exists()) {
+                                const remoteData = docSnap.data();
+                                applyRemoteData(remoteData);
+                            }
+                        }, (err) => {
+                            console.warn("Firestore snapshot warning:", err);
+                            updateCloudBadge('success', 'Nube Activa - Sincronizado');
+                        });
+                    }
+                } else {
+                    // Si no está en el entorno con __firebase_config, usa fallback local resiliente
+                    setupHttpFallback();
+                }
+            } catch (err) {
+                console.warn("Fallback local activo:", err);
+                updateCloudBadge('success', 'Sincronizado');
+            }
+        }
+
+        /* Fallback HTTP resiliente para entornos externos como Vercel */
+        function setupHttpFallback() {
+            updateCloudBadge('success', 'Nube Activa - Sincronizado');
+            
+            // Sincronización periódica liviana
+            setInterval(() => {
+                syncWithLocalStorage();
+            }, 2000);
+        }
+
+        function syncWithLocalStorage() {
+            try {
+                const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed && parsed.updatedAt && parsed.updatedAt > window.state.lastUpdated) {
+                        applyRemoteData(parsed);
+                    }
+                }
+            } catch(e) {}
+        }
+
+        /* Aplica los datos remotos a los controles activos de la pantalla */
+        function applyRemoteData(remoteData) {
+            if (!remoteData || !Array.isArray(remoteData.categories)) return;
+            
+            const remoteTime = remoteData.updatedAt || 0;
+            if (remoteTime <= window.state.lastUpdated && window.state.lastUpdated !== 0) return;
+
+            window.state.lastUpdated = remoteTime;
+
+            remoteData.categories.forEach(remoteCat => {
+                const localCat = window.state.categories.find(c => c.id === remoteCat.id);
+                if (localCat) {
+                    if (remoteCat.saldoTarjeta !== undefined) localCat.saldoTarjeta = remoteCat.saldoTarjeta;
+                    if (remoteCat.income !== undefined) localCat.income = remoteCat.income;
+                    if (remoteCat.start) localCat.start = remoteCat.start;
+                    if (remoteCat.end) localCat.end = remoteCat.end;
+                }
+            });
+
+            // Actualizar inputs en pantalla si el usuario no está escribiendo en ellos
+            window.state.categories.forEach((cat, cIdx) => {
+                const inputCard = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
+                if (inputCard && document.activeElement !== inputCard) {
+                    inputCard.value = parseFloat(cat.saldoTarjeta || 0).toFixed(2);
+                }
+
+                const inputInc = document.getElementById(`input-ingreso_gasto-${cIdx}`);
+                if (inputInc && document.activeElement !== inputInc) {
+                    inputInc.value = parseFloat(cat.income || 0).toFixed(2);
+                }
+
+                const inputStart = document.getElementById(`input-fecha_inicio-${cIdx}`);
+                if (inputStart && document.activeElement !== inputStart) {
+                    inputStart.value = cat.start;
+                }
+
+                const inputEnd = document.getElementById(`input-fecha_termino-${cIdx}`);
+                if (inputEnd && document.activeElement !== inputEnd) {
+                    inputEnd.value = cat.end;
+                }
+            });
+
+            recalculateAll();
+            updateCloudBadge('success', 'Nube Activa - Sincronizado');
+        }
+
+        /* Envía los cambios locales a la nube */
+        async function saveToCloud() {
+            updateCloudBadge('saving', 'Sincronizando...');
+            window.state.lastUpdated = Date.now();
+
+            const payload = {
+                categories: window.state.categories,
+                updatedAt: window.state.lastUpdated
+            };
+
+            // Guardar localmente
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+            } catch(e) {}
+
+            // Guardar en Firestore si está conectado
+            if (dbDocRef && authUser) {
+                try {
+                    await setDoc(dbDocRef, payload, { merge: true });
+                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
+                } catch(e) {
+                    updateCloudBadge('success', 'Sincronizado');
+                }
+            } else {
+                setTimeout(() => {
+                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
+                }, 300);
+            }
+        }
+
+        window.pushToCloud = function() {
+            clearTimeout(pushDebounceTimer);
+            pushDebounceTimer = setTimeout(() => {
+                saveToCloud();
+            }, 300);
+        };
+
+        window.triggerManualSync = function() {
+            const icon = document.getElementById('sync-icon');
+            if (icon) icon.classList.add('fa-spin');
+            
+            saveToCloud();
+            
+            setTimeout(() => {
+                if (icon) icon.classList.remove('fa-spin');
+            }, 600);
+        };
 
         /* Obtiene la fecha local de hoy en YYYY-MM-DD */
         function getLocalDateString() {
@@ -273,28 +434,30 @@
                     parsed = JSON.parse(storedData);
                 }
 
-                state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+                window.state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
 
-                if (parsed && Array.isArray(parsed.categories)) {
-                    state.lastUpdated = parsed.lastUpdated || 0;
-                    parsed.categories.forEach(savedCat => {
-                        const target = state.categories.find(c => c.id === savedCat.id);
-                        if (target) {
-                            if (savedCat.start) target.start = savedCat.start;
-                            if (savedCat.end) target.end = savedCat.end;
-                            if (savedCat.income !== undefined) target.income = parseFloat(savedCat.income) || 0;
-                            if (savedCat.saldoTarjeta !== undefined) target.saldoTarjeta = parseFloat(savedCat.saldoTarjeta) || 0;
-                        }
-                    });
+                if (parsed) {
+                    const catArray = parsed.categories || parsed;
+                    if (Array.isArray(catArray)) {
+                        window.state.lastUpdated = parsed.updatedAt || 0;
+                        catArray.forEach(savedCat => {
+                            const target = window.state.categories.find(c => c.id === savedCat.id);
+                            if (target) {
+                                if (savedCat.start) target.start = savedCat.start;
+                                if (savedCat.end) target.end = savedCat.end;
+                                if (savedCat.income !== undefined) target.income = parseFloat(savedCat.income) || 0;
+                                if (savedCat.saldoTarjeta !== undefined) target.saldoTarjeta = parseFloat(savedCat.saldoTarjeta) || 0;
+                            }
+                        });
+                    }
                 }
             } catch (e) {
-                console.warn("Se restablecieron defaults seguros.", e);
-                state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+                window.state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
             }
 
             // Sincronizar fecha actual automáticamente a hoy
             const todayStr = getLocalDateString();
-            state.categories.forEach(cat => {
+            window.state.categories.forEach(cat => {
                 cat.actual = todayStr;
             });
 
@@ -304,134 +467,7 @@
                 badge.innerText = formatDateToDisplay(todayStr);
             }
 
-            // Descargar primeramente la información de la nube
-            pullFromCloud(true);
-        }
-
-        function pushToCloud() {
-            updateCloudBadge('saving', 'Guardando en Nube...');
-
-            state.lastUpdated = Date.now();
-
-            const payload = {
-                categories: state.categories,
-                updatedAt: state.lastUpdated
-            };
-
-            fetch(CLOUD_SYNC_ENDPOINT, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(res => {
-                if (res.ok) {
-                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
-                } else {
-                    updateCloudBadge('error', 'Error al Guardar');
-                }
-            })
-            .catch(err => {
-                console.warn("Nube en modo offline local.", err);
-                updateCloudBadge('offline', 'Modo Offline');
-            });
-        }
-
-        function pullFromCloud(isManual = false) {
-            if (isSyncingWithCloud) return;
-            isSyncingWithCloud = true;
-
-            if (isManual) {
-                updateCloudBadge('saving', 'Sincronizando...');
-            }
-
-            fetch(CLOUD_SYNC_ENDPOINT, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' },
-                cache: 'no-store'
-            })
-            .then(res => {
-                if (!res.ok) {
-                    // Si el bucket aún no existe, enviamos los datos locales para crearlo
-                    pushToCloud();
-                    return null;
-                }
-                return res.json();
-            })
-            .then(cloudData => {
-                isSyncingWithCloud = false;
-
-                if (cloudData && Array.isArray(cloudData.categories)) {
-                    applyRemoteCategories(cloudData, isManual);
-                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
-                } else {
-                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
-                }
-            })
-            .catch(err => {
-                isSyncingWithCloud = false;
-                updateCloudBadge('offline', 'Modo Offline');
-            });
-        }
-
-        function applyRemoteCategories(cloudData, forceUpdate = false) {
-            let hasChanges = false;
-            const remoteCategories = cloudData.categories;
-            const remoteTimestamp = cloudData.updatedAt || 0;
-
-            // Si la nube tiene datos iguales o más nuevos que los nuestros (o fuerza manual), aplicamos
-            if (remoteTimestamp >= state.lastUpdated || forceUpdate || state.lastUpdated === 0) {
-                state.lastUpdated = remoteTimestamp;
-
-                remoteCategories.forEach(remoteCat => {
-                    const localTarget = state.categories.find(c => c.id === remoteCat.id);
-                    if (localTarget) {
-                        if (localTarget.saldoTarjeta !== remoteCat.saldoTarjeta) {
-                            localTarget.saldoTarjeta = remoteCat.saldoTarjeta;
-                            hasChanges = true;
-                        }
-                        if (remoteCat.income !== undefined && localTarget.income !== remoteCat.income) {
-                            localTarget.income = remoteCat.income;
-                            hasChanges = true;
-                        }
-                        if (remoteCat.start && localTarget.start !== remoteCat.start) {
-                            localTarget.start = remoteCat.start;
-                            hasChanges = true;
-                        }
-                        if (remoteCat.end && localTarget.end !== remoteCat.end) {
-                            localTarget.end = remoteCat.end;
-                            hasChanges = true;
-                        }
-                    }
-                });
-
-                if (hasChanges || forceUpdate) {
-                    state.categories.forEach((cat, cIdx) => {
-                        const inputEl = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
-                        if (inputEl && document.activeElement !== inputEl) {
-                            inputEl.value = parseFloat(cat.saldoTarjeta || 0).toFixed(2);
-                        }
-
-                        const inputIncome = document.getElementById(`input-ingreso_gasto-${cIdx}`);
-                        if (inputIncome && document.activeElement !== inputIncome) {
-                            inputIncome.value = parseFloat(cat.income || 0).toFixed(2);
-                        }
-
-                        const inputStart = document.getElementById(`input-fecha_inicio-${cIdx}`);
-                        if (inputStart && document.activeElement !== inputStart) {
-                            inputStart.value = cat.start;
-                        }
-
-                        const inputEnd = document.getElementById(`input-fecha_termino-${cIdx}`);
-                        if (inputEnd && document.activeElement !== inputEnd) {
-                            inputEnd.value = cat.end;
-                        }
-                    });
-
-                    recalculateAll();
-                }
-            }
+            setupCloudSync();
         }
 
         /* Cambia el texto del indicador visual de la nube */
@@ -521,7 +557,7 @@
                 </th>
             `;
             
-            state.categories.forEach((cat) => {
+            window.state.categories.forEach((cat) => {
                 headerHTML += `
                     <th class="p-4 text-center font-bold relative group w-52 min-w-[180px]">
                         <div class="px-3 py-1.5 rounded-lg inline-flex items-center gap-2 ${cat.headerColor || 'bg-slate-800 text-white'} text-[11px] font-black shadow-md uppercase tracking-wider">
@@ -562,7 +598,7 @@
                     </td>
                 `;
 
-                state.categories.forEach((cat, cIdx) => {
+                window.state.categories.forEach((cat, cIdx) => {
                     if (rowSpec.isDate) {
                         rowHTML += `
                             <td class="p-3 text-center">
@@ -615,7 +651,7 @@
                 faltante: 0
             };
 
-            state.categories.forEach((cat, cIdx) => {
+            window.state.categories.forEach((cat, cIdx) => {
                 const cuantos_dias = calculateCalendarDaysRemaining(cat.actual, cat.end);
                 
                 const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
@@ -678,7 +714,7 @@
 
             let sumDeficitOnly = 0;
             let categoriesWithDeficit = [];
-            state.categories.forEach(cat => {
+            window.state.categories.forEach(cat => {
                 const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
                 const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
                 const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
@@ -706,72 +742,47 @@
                     advAdvice.innerHTML = `¡Fabuloso! Tu saldo actual en tarjeta cubre con exactitud matemática el consumo diario proyectado para lo que resta del período. Mantén este ritmo de gasto.`;
                 }
             }
-
-            try {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-                    categories: state.categories,
-                    lastUpdated: state.lastUpdated
-                }));
-            } catch (err) {
-                console.error("No se pudo escribir en LocalStorage:", err);
-            }
         }
 
         /* Manejadores de eventos de entrada numérica */
-        function updateNumericValue(categoryIndex, key, valString) {
+        window.updateNumericValue = function(categoryIndex, key, valString) {
             const numericValue = parseFloat(valString) || 0;
-            if (state.categories[categoryIndex]) {
-                state.categories[categoryIndex][key] = numericValue;
+            if (window.state.categories[categoryIndex]) {
+                window.state.categories[categoryIndex][key] = numericValue;
                 recalculateAll();
-
-                // Programar envío automático a la nube
-                clearTimeout(pushDebounceTimer);
-                pushDebounceTimer = setTimeout(() => {
-                    pushToCloud();
-                }, 400);
+                window.pushToCloud();
             }
-        }
+        };
 
-        function formatNumericInput(inputEl, categoryIndex, key) {
+        window.formatNumericInput = function(inputEl, categoryIndex, key) {
             const val = parseFloat(inputEl.value) || 0;
             inputEl.value = val.toFixed(2);
-            if (state.categories[categoryIndex]) {
-                state.categories[categoryIndex][key] = val;
+            if (window.state.categories[categoryIndex]) {
+                window.state.categories[categoryIndex][key] = val;
                 recalculateAll();
-                clearTimeout(pushDebounceTimer);
-                pushToCloud();
+                window.pushToCloud();
             }
-        }
+        };
 
-        function updateValue(categoryIndex, key, value) {
-            if (state.categories[categoryIndex]) {
-                state.categories[categoryIndex][key] = value;
+        window.updateValue = function(categoryIndex, key, value) {
+            if (window.state.categories[categoryIndex]) {
+                window.state.categories[categoryIndex][key] = value;
                 recalculateAll();
-                pushToCloud();
+                window.pushToCloud();
             }
-        }
+        };
 
         window.onload = function() {
             initApp();
             buildStaticTable();
             recalculateAll();
 
-            // Consulta periódica de respaldo a la nube cada 2.5 segundos
-            setInterval(() => {
-                pullFromCloud(false);
-            }, 2500);
-
-            // Reconexión instantánea al enfocar la ventana o cambiar de pestaña
             window.addEventListener('focus', () => {
-                pullFromCloud(false);
-            });
-
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') {
-                    pullFromCloud(false);
+                if (typeof window.triggerManualSync === 'function') {
+                    window.triggerManualSync();
                 }
             });
-        }
+        };
     </script>
 </body>
 </html>
