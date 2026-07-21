@@ -121,7 +121,6 @@
             </div>
         </header>
 
-        <!-- Módulo del Asesor Inteligente (Ancho Completo Premium) -->
         <section class="w-full">
             
             <!-- Diagnóstico Financiero Automatizado -->
@@ -172,7 +171,6 @@
             <p id="notification-text" class="text-xs font-semibold text-slate-200"></p>
         </div>
 
-        <!-- Contenedor Principal de la Tabla de Control -->
         <main class="glass-panel rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
             <div class="p-6 border-b border-slate-800/80 bg-slate-900/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -192,7 +190,7 @@
                 <table class="w-full min-w-[1000px] border-collapse text-left text-sm table-fixed">
                     <thead>
                         <tr class="bg-slate-950/85 border-b border-slate-800" id="table-header-row">
-                            <!-- Cabeceras renderizadas de forma dinámica en una única fila para alineación perfecta -->
+                            <!-- Cabeceras renderizadas de forma dinámica -->
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-800/40" id="spreadsheet-body">
@@ -212,7 +210,6 @@
 
     </div>
 
-    <!-- Modal para Configurar Clave de Sincronización Multi-Dispositivo -->
     <div id="sync-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden transition-all duration-300 opacity-0">
         <div class="glass-panel rounded-2xl w-full max-w-md p-6 border border-slate-700/60 shadow-2xl transform scale-95 transition-all duration-300" id="sync-modal-card">
             <div class="flex justify-between items-center mb-5">
@@ -294,16 +291,20 @@
         /* Variables de Estado Global */
         let state = { categories: [] };
         let currentSyncCode = 'MI-CUENTA-2026';
-        let lastLocalUpdateTimestamp = 0;
         let isSyncingWithCloud = false;
+        
+        // Identificador único de este dispositivo/pestaña para ignorar eco propio en tiempo real
+        const deviceId = 'dev_' + Math.random().toString(36).substring(2, 9);
+        let activeEventSource = null;
+        let pushDebounceTimer = null;
 
         const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v6';
         const SYNC_CODE_STORAGE_KEY = 'premium_budget_sync_code_v1';
         
-        /* Servidor de Sincronización en la Nube (API REST en tiempo real con alta disponibilidad) */
+        /* Endpoint de Sincronización Realtime Nube */
         const CLOUD_SYNC_ENDPOINT = 'https://gastos-app-2026-default-rtdb.firebaseio.com/sync/';
 
-        /* Función para obtener la fecha de hoy en huso local del dispositivo */
+        /* Obtiene la fecha local de hoy en YYYY-MM-DD */
         function getLocalDateString() {
             const now = new Date();
             const year = now.getFullYear();
@@ -354,7 +355,7 @@
                 state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
             }
 
-            // Sincronizar fecha actual de forma 100% automática a hoy
+            // Sincronizar fecha actual automáticamente a hoy
             const todayStr = getLocalDateString();
             state.categories.forEach(cat => {
                 cat.actual = todayStr;
@@ -366,8 +367,9 @@
                 badge.innerText = formatDateToDisplay(todayStr);
             }
 
-            // Iniciar sincronización inicial con la nube
+            // Conectar la escucha en tiempo real SSE + Pull Inicial
             pullFromCloud(true);
+            connectRealtimeSync();
         }
 
         function updateSyncBadgeText(code) {
@@ -375,24 +377,38 @@
             if (el) el.innerText = code;
         }
 
-        /* Enviar datos actualizados a la Nube */
+        function setSyncStatusIndicator(status) {
+            const ping = document.getElementById('sync-ping');
+            const dot = document.getElementById('sync-dot');
+            if (!ping || !dot) return;
+
+            if (status === 'pushing') {
+                ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+                dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500";
+            } else if (status === 'connected') {
+                ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
+            } else if (status === 'offline') {
+                ping.className = "hidden";
+                dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500";
+            }
+        }
+
+        /* Enviar datos actualizados a la Nube al instante */
         function pushToCloud() {
             if (!currentSyncCode) return;
             
             const sanitizedCode = currentSyncCode.replace(/[^a-zA-Z0-9_-]/g, '_');
             const url = `${CLOUD_SYNC_ENDPOINT}${sanitizedCode}.json`;
             const nowTs = Date.now();
-            lastLocalUpdateTimestamp = nowTs;
 
             const payload = {
                 categories: state.categories,
+                senderId: deviceId,
                 updatedAt: nowTs
             };
 
-            const ping = document.getElementById('sync-ping');
-            const dot = document.getElementById('sync-dot');
-            if (ping) ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
-            if (dot) dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500";
+            setSyncStatusIndicator('pushing');
 
             fetch(url, {
                 method: 'PUT',
@@ -401,16 +417,75 @@
             })
             .then(res => {
                 if (res.ok) {
-                    if (ping) ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
-                    if (dot) dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
+                    setSyncStatusIndicator('connected');
                 }
             })
             .catch(err => {
+                setSyncStatusIndicator('offline');
                 console.warn("Nube en modo offline local.", err);
             });
         }
 
-        /* Recibir datos más recientes desde la Nube */
+        /* Escuchar cambios en Tiempo Real mediante Server-Sent Events (SSE - EventSource) */
+        function connectRealtimeSync() {
+            if (activeEventSource) {
+                activeEventSource.close();
+                activeEventSource = null;
+            }
+
+            if (!currentSyncCode) return;
+
+            const sanitizedCode = currentSyncCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const url = `${CLOUD_SYNC_ENDPOINT}${sanitizedCode}.json`;
+
+            try {
+                activeEventSource = new EventSource(url);
+
+                activeEventSource.addEventListener('put', (e) => {
+                    handleCloudSSEEvent(e.data);
+                });
+
+                activeEventSource.addEventListener('patch', (e) => {
+                    handleCloudSSEEvent(e.data);
+                });
+
+                activeEventSource.onopen = () => {
+                    setSyncStatusIndicator('connected');
+                };
+
+                activeEventSource.onerror = () => {
+                    setSyncStatusIndicator('offline');
+                };
+            } catch (err) {
+                console.warn("No se pudo iniciar listener SSE, usando polling fallback.", err);
+            }
+        }
+
+        /* Procesar actualizaciones instantáneas recibidas desde otro dispositivo */
+        function handleCloudSSEEvent(rawJson) {
+            try {
+                const sseData = JSON.parse(rawJson);
+                if (!sseData || !sseData.data) return;
+
+                const payload = sseData.data;
+
+                // Si fue enviado por este mismo dispositivo, ignorar para evitar bucles
+                if (payload.senderId === deviceId) {
+                    return;
+                }
+
+                if (Array.isArray(payload.categories)) {
+                    applyRemoteCategories(payload.categories);
+                } else {
+                    // Si es una actualización parcial, pedir todo el paquete
+                    pullFromCloud(false);
+                }
+            } catch (err) {
+                console.error("Error al procesar mensaje de la nube:", err);
+            }
+        }
+
+        /* Solicitar datos más recientes mediante GET REST */
         function pullFromCloud(isInitial = false) {
             if (!currentSyncCode || isSyncingWithCloud) return;
 
@@ -422,52 +497,79 @@
             .then(res => res.json())
             .then(cloudData => {
                 isSyncingWithCloud = false;
-                if (cloudData && Array.isArray(cloudData.categories) && cloudData.updatedAt) {
-                    if (cloudData.updatedAt > lastLocalUpdateTimestamp) {
-                        lastLocalUpdateTimestamp = cloudData.updatedAt;
-                        
-                        // Actualizar saldos y fechas desde la nube
-                        let hasChanges = false;
-                        cloudData.categories.forEach(remoteCat => {
-                            const localTarget = state.categories.find(c => c.id === remoteCat.id);
-                            if (localTarget) {
-                                if (localTarget.saldoTarjeta !== remoteCat.saldoTarjeta) {
-                                    localTarget.saldoTarjeta = remoteCat.saldoTarjeta;
-                                    hasChanges = true;
-                                }
-                                if (remoteCat.income !== undefined) localTarget.income = remoteCat.income;
-                                if (remoteCat.start) localTarget.start = remoteCat.start;
-                                if (remoteCat.end) localTarget.end = remoteCat.end;
-                            }
-                        });
-
-                        if (hasChanges || isInitial) {
-                            // Actualizar inputs visibles sin quitar el foco activo
-                            state.categories.forEach((cat, cIdx) => {
-                                const inputEl = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
-                                if (inputEl && document.activeElement !== inputEl) {
-                                    inputEl.value = parseFloat(cat.saldoTarjeta || 0).toFixed(2);
-                                }
-                            });
-
-                            recalculateAll();
-                            if (!isInitial && hasChanges) {
-                                showNotification("📲 ¡Saldos sincronizados desde tu otro dispositivo!", "☁️");
-                            }
-                        }
+                if (cloudData && Array.isArray(cloudData.categories)) {
+                    if (cloudData.senderId !== deviceId || isInitial) {
+                        applyRemoteCategories(cloudData.categories, isInitial);
                     }
                 } else if (isInitial) {
-                    // Si el código es totalmente nuevo en la nube, subimos nuestro estado inicial
                     pushToCloud();
                 }
             })
             .catch(err => {
                 isSyncingWithCloud = false;
-                console.warn("No se pudo conectar a la nube temporalmente.", err);
+                setSyncStatusIndicator('offline');
             });
         }
 
-        /* Calcula de forma robusta los días útiles para amortizaciones omitiendo fines de semana o filtrando sábados */
+        /* Aplica los saldos y fechas desde otro dispositivo directamente en la pantalla */
+        function applyRemoteCategories(remoteCategories, isInitial = false) {
+            let hasChanges = false;
+            
+            remoteCategories.forEach(remoteCat => {
+                const localTarget = state.categories.find(c => c.id === remoteCat.id);
+                if (localTarget) {
+                    if (localTarget.saldoTarjeta !== remoteCat.saldoTarjeta) {
+                        localTarget.saldoTarjeta = remoteCat.saldoTarjeta;
+                        hasChanges = true;
+                    }
+                    if (remoteCat.income !== undefined && localTarget.income !== remoteCat.income) {
+                        localTarget.income = remoteCat.income;
+                        hasChanges = true;
+                    }
+                    if (remoteCat.start && localTarget.start !== remoteCat.start) {
+                        localTarget.start = remoteCat.start;
+                        hasChanges = true;
+                    }
+                    if (remoteCat.end && localTarget.end !== remoteCat.end) {
+                        localTarget.end = remoteCat.end;
+                        hasChanges = true;
+                    }
+                }
+            });
+
+            if (hasChanges || isInitial) {
+                // Actualizar los valores en pantalla solo si la celda no está siendo editada en ese instante
+                state.categories.forEach((cat, cIdx) => {
+                    const inputEl = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
+                    if (inputEl && document.activeElement !== inputEl) {
+                        inputEl.value = parseFloat(cat.saldoTarjeta || 0).toFixed(2);
+                    }
+
+                    const inputIncome = document.getElementById(`input-ingreso_gasto-${cIdx}`);
+                    if (inputIncome && document.activeElement !== inputIncome) {
+                        inputIncome.value = parseFloat(cat.income || 0).toFixed(2);
+                    }
+
+                    const inputStart = document.getElementById(`input-fecha_inicio-${cIdx}`);
+                    if (inputStart && document.activeElement !== inputStart) {
+                        inputStart.value = cat.start;
+                    }
+
+                    const inputEnd = document.getElementById(`input-fecha_termino-${cIdx}`);
+                    if (inputEnd && document.activeElement !== inputEnd) {
+                        inputEnd.value = cat.end;
+                    }
+                });
+
+                recalculateAll();
+
+                if (!isInitial && hasChanges) {
+                    showNotification("📲 ¡Saldos sincronizados desde tu otro dispositivo en tiempo real!", "☁️");
+                }
+            }
+        }
+
+        /* Calcula los días hábiles/sábados para amortizaciones */
         function calculateDaysByMode(startDateStr, endDateStr, mode, isRemaining = false) {
             if (!startDateStr || !endDateStr || typeof startDateStr !== 'string' || typeof endDateStr !== 'string') return 0;
             
@@ -480,27 +582,21 @@
             
             if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
             
-            /* Regla de Excel: La fecha de término es exclusiva (hasta end - 1 día) */
             const targetEnd = new Date(end);
             targetEnd.setDate(targetEnd.getDate() - 1);
             
             let current = new Date(start);
             if (isRemaining) {
-                /* Para amortización, la cuenta de consumo restante empieza desde el día posterior al actual */
                 current.setDate(current.getDate() + 1);
             }
             
             let count = 0;
             while (current <= targetEnd) {
-                const day = current.getDay(); /* 0 = Domingo, 1 = Lunes, ..., 6 = Sábado */
+                const day = current.getDay();
                 if (mode === 'working') {
-                    if (day !== 0 && day !== 6) {
-                        count++;
-                    }
+                    if (day !== 0 && day !== 6) count++;
                 } else if (mode === 'saturday') {
-                    if (day === 6) {
-                        count++;
-                    }
+                    if (day === 6) count++;
                 } else {
                     count++;
                 }
@@ -509,7 +605,7 @@
             return count;
         }
 
-        /* Calcula los días calendario faltantes exactos (Fecha de Término - Fecha Actual) */
+        /* Calcula los días calendario faltantes exactos */
         function calculateCalendarDaysRemaining(actualDateStr, endDateStr) {
             if (!actualDateStr || !endDateStr || typeof actualDateStr !== 'string' || typeof endDateStr !== 'string') return 0;
             const actualParts = actualDateStr.split('-');
@@ -534,14 +630,13 @@
             return `${isNegative ? '-' : ''}S/ ${absVal}`;
         }
 
-        /* Construye la estructura visual de la tabla por única vez */
+        /* Construye la estructura de la tabla */
         function buildStaticTable() {
             const headerRow = document.getElementById('table-header-row');
             const tbody = document.getElementById('spreadsheet-body');
             
             if (!headerRow || !tbody) return;
 
-            // 1. Cabeceras
             let headerHTML = `
                 <th class="p-4 font-bold text-[11px] uppercase tracking-wider text-slate-400 w-1/5 min-w-[200px]">
                     INDICADOR / CUENTA
@@ -565,7 +660,6 @@
             `;
             headerRow.innerHTML = headerHTML;
 
-            // 2. Filas de Configuración
             const rowsConfig = [
                 { id: 'cuantos_dias', label: 'CUANTOS DIAS', icon: 'fa-hourglass-half', isCalculated: true, labelClass: 'text-slate-400 font-semibold', hideTotal: true },
                 { id: 'fecha_inicio', label: 'FECHA DE INICIO', icon: 'fa-calendar-plus', isDate: true, key: 'start', hideTotal: true },
@@ -583,7 +677,6 @@
             rowsConfig.forEach((rowSpec) => {
                 let rowHTML = `<tr class="border-b border-slate-800/40 hover:bg-slate-900/20 transition-colors ${rowSpec.rowClass || ''}">`;
                 
-                // Etiqueta lateral izquierda
                 rowHTML += `
                     <td class="p-4 font-semibold text-slate-300 flex items-center gap-2.5">
                         <i class="fa-solid ${rowSpec.icon} w-5 text-slate-500 text-center text-xs"></i>
@@ -591,7 +684,6 @@
                     </td>
                 `;
 
-                // Columnas por categoría
                 state.categories.forEach((cat, cIdx) => {
                     if (rowSpec.isDate) {
                         rowHTML += `
@@ -614,7 +706,7 @@
                                     <input type="number" step="0.01" value="${numericVal}" 
                                         id="input-${rowSpec.id}-${cIdx}"
                                         oninput="updateNumericValue(${cIdx}, '${rowSpec.key}', this.value)" 
-                                        onblur="formatNumericInput(this)"
+                                        onblur="formatNumericInput(this, ${cIdx}, '${rowSpec.key}')"
                                         class="bg-transparent border-none text-right px-2.5 py-1.5 text-xs text-white font-black w-full focus:outline-none">
                                 </div>
                             </td>
@@ -624,7 +716,6 @@
                     }
                 });
 
-                // Columna total
                 let totalIdAttr = rowSpec.hideTotal ? '' : `id="total-val-${rowSpec.id}"`;
                 rowHTML += `
                     <td ${totalIdAttr} class="p-4 text-center bg-slate-950/50 font-black border-l border-slate-800 text-xs">
@@ -637,7 +728,7 @@
             });
         }
 
-        /* Actualiza y recalcula únicamente el contenido de texto */
+        /* Recalcula métricas y totales */
         function recalculateAll() {
             let totals = {
                 income: 0,
@@ -659,7 +750,6 @@
                 const saldo_tarjeta = cat.saldoTarjeta;
                 const faltante = resultado_saldo - saldo_tarjeta;
 
-                // Inyección de textos a celdas calculadas
                 const elCuantos = document.getElementById(`calc-cuantos_dias-${cIdx}`);
                 if (elCuantos) elCuantos.innerHTML = `<span class="font-bold text-slate-300">${cuantos_dias}</span>`;
 
@@ -683,7 +773,6 @@
                 totals.faltante += faltante;
             });
 
-            // Actualizar la columna Totales
             const tIncome = document.getElementById('total-val-ingreso_gasto');
             if (tIncome) tIncome.innerHTML = `<span class="font-black text-white">${formatPEN(totals.income)}</span>`;
 
@@ -703,7 +792,6 @@
                 tFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(totals.faltante)}</span>`;
             }
 
-            // Actualizar tarjetas de métricas superiores
             const elInc = document.getElementById('total-income-stat');
             const elCrd = document.getElementById('total-card-stat');
             const elDef = document.getElementById('total-deficit-stat');
@@ -728,7 +816,6 @@
 
             if (elDef) elDef.innerText = formatPEN(sumDeficitOnly);
 
-            // Actualizar panel de asesor inteligente
             const advTitle = document.getElementById('advisor-title');
             const advAdvice = document.getElementById('advisor-advice');
 
@@ -743,7 +830,6 @@
                 }
             }
 
-            // Guardar en Local Storage
             try {
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state.categories));
             } catch (err) {
@@ -751,19 +837,30 @@
             }
         }
 
-        /* Actualización inmediata del estado y sincronización a la Nube al escribir */
+        /* Actualización fluida al escribir con debounce para evitar saturación de red */
         function updateNumericValue(categoryIndex, key, valString) {
             const numericValue = parseFloat(valString) || 0;
             if (state.categories[categoryIndex]) {
                 state.categories[categoryIndex][key] = numericValue;
                 recalculateAll();
-                pushToCloud(); // Sincronizar instantáneamente a celular/laptop
+
+                // Programar envío a la nube con leve retardo para tipeo fluido
+                clearTimeout(pushDebounceTimer);
+                pushDebounceTimer = setTimeout(() => {
+                    pushToCloud();
+                }, 350);
             }
         }
 
-        function formatNumericInput(inputEl) {
+        function formatNumericInput(inputEl, categoryIndex, key) {
             const val = parseFloat(inputEl.value) || 0;
             inputEl.value = val.toFixed(2);
+            if (state.categories[categoryIndex]) {
+                state.categories[categoryIndex][key] = val;
+                recalculateAll();
+                clearTimeout(pushDebounceTimer);
+                pushToCloud();
+            }
         }
 
         function updateValue(categoryIndex, key, value) {
@@ -791,7 +888,6 @@
             }
         }
 
-        /* Funciones del Modal de Sincronización */
         function openSyncModal() {
             const modal = document.getElementById('sync-modal');
             const card = document.getElementById('sync-modal-card');
@@ -833,9 +929,10 @@
             updateSyncBadgeText(currentSyncCode);
             
             closeSyncModal();
-            showNotification(`¡Conectado al canal ${currentSyncCode}! Sincronizando...`, "☁️");
+            showNotification(`¡Conectado al canal ${currentSyncCode}! Sincronizando en tiempo real...`, "☁️");
             
             pullFromCloud(true);
+            connectRealtimeSync();
         }
 
         window.onload = function() {
@@ -843,19 +940,21 @@
             buildStaticTable();
             recalculateAll();
 
-            // Polling en segundo plano cada 3 segundos para sincronizar automáticamente con otros dispositivos
+            // Polling de respaldo cada 4 segundos
             setInterval(() => {
                 pullFromCloud(false);
-            }, 3000);
+            }, 4000);
 
-            // Al volver a enfocar la pestaña en celular o laptop, forzar una actualización rápida
+            // Reconexión instantánea al enfocar la ventana
             window.addEventListener('focus', () => {
                 pullFromCloud(false);
+                connectRealtimeSync();
             });
 
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
                     pullFromCloud(false);
+                    connectRealtimeSync();
                 }
             });
         }
