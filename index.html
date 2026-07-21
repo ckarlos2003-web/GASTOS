@@ -107,6 +107,7 @@
             </div>
         </header>
 
+        <!-- Módulo del Asesor Inteligente -->
         <section class="w-full">
             
             <!-- Diagnóstico Financiero Automatizado -->
@@ -151,6 +152,7 @@
             </div>
         </section>
 
+        <!-- Contenedor Principal de la Tabla de Control -->
         <main class="glass-panel rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
             <div class="p-6 border-b border-slate-800/80 bg-slate-900/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -180,13 +182,16 @@
             </div>
         </main>
 
-        <!-- Pie de página con indicador de sincronización activa -->
-        <footer class="text-center py-4 text-xs text-slate-500 flex justify-between items-center px-4">
+        <!-- Pie de página con indicador de sincronización activa y botón manual -->
+        <footer class="text-center py-4 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center px-4 gap-3">
             <p>© 2026 Asesor Financiero Personal. Sincronizado automáticamente entre tus dispositivos.</p>
-            <div class="flex gap-4">
+            <div class="flex items-center gap-3">
                 <span id="cloud-status-badge" class="flex items-center gap-1.5 font-semibold text-emerald-400">
                     <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Nube Activa - Sincronizado
                 </span>
+                <button onclick="pullFromCloud(true)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 border border-slate-700" title="Forzar Sincronización Manual">
+                    <i class="fa-solid fa-rotate text-emerald-400"></i> Sincronizar
+                </button>
             </div>
         </footer>
 
@@ -234,15 +239,14 @@
         ];
 
         /* Variables de Estado Global */
-        let state = { categories: [] };
+        let state = { categories: [], lastUpdated: 0 };
         let isSyncingWithCloud = false;
-        let initialSyncCompleted = false;
         let pushDebounceTimer = null;
 
-        const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v7';
+        const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v8';
         
-        /* Canaleta de Sincronización REST Pública Permanente */
-        const CLOUD_SYNC_ENDPOINT = 'https://jsonblob.com/api/jsonBlob/13425167283910298371';
+        /* Servidor Cloud Key-Value de Alta Disponibilidad con Soporte CORS Total */
+        const CLOUD_SYNC_ENDPOINT = 'https://kvdb.io/ckarlos_gastos_v2026_sync/data';
 
         /* Obtiene la fecha local de hoy en YYYY-MM-DD */
         function getLocalDateString() {
@@ -271,8 +275,9 @@
 
                 state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
 
-                if (Array.isArray(parsed)) {
-                    parsed.forEach(savedCat => {
+                if (parsed && Array.isArray(parsed.categories)) {
+                    state.lastUpdated = parsed.lastUpdated || 0;
+                    parsed.categories.forEach(savedCat => {
                         const target = state.categories.find(c => c.id === savedCat.id);
                         if (target) {
                             if (savedCat.start) target.start = savedCat.start;
@@ -304,20 +309,19 @@
         }
 
         function pushToCloud() {
-            if (!initialSyncCompleted) return;
-
             updateCloudBadge('saving', 'Guardando en Nube...');
+
+            state.lastUpdated = Date.now();
 
             const payload = {
                 categories: state.categories,
-                updatedAt: Date.now()
+                updatedAt: state.lastUpdated
             };
 
             fetch(CLOUD_SYNC_ENDPOINT, {
-                method: 'PUT',
+                method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             })
@@ -334,104 +338,99 @@
             });
         }
 
-        function pullFromCloud(isInitial = false) {
+        function pullFromCloud(isManual = false) {
             if (isSyncingWithCloud) return;
             isSyncingWithCloud = true;
 
+            if (isManual) {
+                updateCloudBadge('saving', 'Sincronizando...');
+            }
+
             fetch(CLOUD_SYNC_ENDPOINT, {
                 method: 'GET',
-                headers: { 'Accept': 'application/json' }
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-store'
             })
             .then(res => {
-                if (res.status === 404 && isInitial) {
-                    // Si el blob no existía aún, lo creamos con POST
-                    return createCloudBlob();
+                if (!res.ok) {
+                    // Si el bucket aún no existe, enviamos los datos locales para crearlo
+                    pushToCloud();
+                    return null;
                 }
                 return res.json();
             })
             .then(cloudData => {
                 isSyncingWithCloud = false;
-                initialSyncCompleted = true;
 
                 if (cloudData && Array.isArray(cloudData.categories)) {
-                    applyRemoteCategories(cloudData.categories, isInitial);
+                    applyRemoteCategories(cloudData, isManual);
+                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
+                } else {
                     updateCloudBadge('success', 'Nube Activa - Sincronizado');
                 }
             })
             .catch(err => {
                 isSyncingWithCloud = false;
-                initialSyncCompleted = true;
                 updateCloudBadge('offline', 'Modo Offline');
             });
         }
 
-        /* Crea la canaleta inicial si el servidor la requiere */
-        function createCloudBlob() {
-            const payload = {
-                categories: state.categories,
-                updatedAt: Date.now()
-            };
-
-            return fetch(CLOUD_SYNC_ENDPOINT, {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            }).then(() => payload);
-        }
-
-        function applyRemoteCategories(remoteCategories, isInitial = false) {
+        function applyRemoteCategories(cloudData, forceUpdate = false) {
             let hasChanges = false;
-            
-            remoteCategories.forEach(remoteCat => {
-                const localTarget = state.categories.find(c => c.id === remoteCat.id);
-                if (localTarget) {
-                    if (localTarget.saldoTarjeta !== remoteCat.saldoTarjeta) {
-                        localTarget.saldoTarjeta = remoteCat.saldoTarjeta;
-                        hasChanges = true;
-                    }
-                    if (remoteCat.income !== undefined && localTarget.income !== remoteCat.income) {
-                        localTarget.income = remoteCat.income;
-                        hasChanges = true;
-                    }
-                    if (remoteCat.start && localTarget.start !== remoteCat.start) {
-                        localTarget.start = remoteCat.start;
-                        hasChanges = true;
-                    }
-                    if (remoteCat.end && localTarget.end !== remoteCat.end) {
-                        localTarget.end = remoteCat.end;
-                        hasChanges = true;
-                    }
-                }
-            });
+            const remoteCategories = cloudData.categories;
+            const remoteTimestamp = cloudData.updatedAt || 0;
 
-            if (hasChanges || isInitial) {
-                // Actualizar las celdas en pantalla si el usuario no las está editando en este preciso instante
-                state.categories.forEach((cat, cIdx) => {
-                    const inputEl = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
-                    if (inputEl && document.activeElement !== inputEl) {
-                        inputEl.value = parseFloat(cat.saldoTarjeta || 0).toFixed(2);
-                    }
+            // Si la nube tiene datos iguales o más nuevos que los nuestros (o fuerza manual), aplicamos
+            if (remoteTimestamp >= state.lastUpdated || forceUpdate || state.lastUpdated === 0) {
+                state.lastUpdated = remoteTimestamp;
 
-                    const inputIncome = document.getElementById(`input-ingreso_gasto-${cIdx}`);
-                    if (inputIncome && document.activeElement !== inputIncome) {
-                        inputIncome.value = parseFloat(cat.income || 0).toFixed(2);
-                    }
-
-                    const inputStart = document.getElementById(`input-fecha_inicio-${cIdx}`);
-                    if (inputStart && document.activeElement !== inputStart) {
-                        inputStart.value = cat.start;
-                    }
-
-                    const inputEnd = document.getElementById(`input-fecha_termino-${cIdx}`);
-                    if (inputEnd && document.activeElement !== inputEnd) {
-                        inputEnd.value = cat.end;
+                remoteCategories.forEach(remoteCat => {
+                    const localTarget = state.categories.find(c => c.id === remoteCat.id);
+                    if (localTarget) {
+                        if (localTarget.saldoTarjeta !== remoteCat.saldoTarjeta) {
+                            localTarget.saldoTarjeta = remoteCat.saldoTarjeta;
+                            hasChanges = true;
+                        }
+                        if (remoteCat.income !== undefined && localTarget.income !== remoteCat.income) {
+                            localTarget.income = remoteCat.income;
+                            hasChanges = true;
+                        }
+                        if (remoteCat.start && localTarget.start !== remoteCat.start) {
+                            localTarget.start = remoteCat.start;
+                            hasChanges = true;
+                        }
+                        if (remoteCat.end && localTarget.end !== remoteCat.end) {
+                            localTarget.end = remoteCat.end;
+                            hasChanges = true;
+                        }
                     }
                 });
 
-                recalculateAll();
+                if (hasChanges || forceUpdate) {
+                    state.categories.forEach((cat, cIdx) => {
+                        const inputEl = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
+                        if (inputEl && document.activeElement !== inputEl) {
+                            inputEl.value = parseFloat(cat.saldoTarjeta || 0).toFixed(2);
+                        }
+
+                        const inputIncome = document.getElementById(`input-ingreso_gasto-${cIdx}`);
+                        if (inputIncome && document.activeElement !== inputIncome) {
+                            inputIncome.value = parseFloat(cat.income || 0).toFixed(2);
+                        }
+
+                        const inputStart = document.getElementById(`input-fecha_inicio-${cIdx}`);
+                        if (inputStart && document.activeElement !== inputStart) {
+                            inputStart.value = cat.start;
+                        }
+
+                        const inputEnd = document.getElementById(`input-fecha_termino-${cIdx}`);
+                        if (inputEnd && document.activeElement !== inputEnd) {
+                            inputEnd.value = cat.end;
+                        }
+                    });
+
+                    recalculateAll();
+                }
             }
         }
 
@@ -709,7 +708,10 @@
             }
 
             try {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state.categories));
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+                    categories: state.categories,
+                    lastUpdated: state.lastUpdated
+                }));
             } catch (err) {
                 console.error("No se pudo escribir en LocalStorage:", err);
             }
@@ -722,7 +724,7 @@
                 state.categories[categoryIndex][key] = numericValue;
                 recalculateAll();
 
-                // Programar envío automático a la nube con rebote inteligente
+                // Programar envío automático a la nube
                 clearTimeout(pushDebounceTimer);
                 pushDebounceTimer = setTimeout(() => {
                     pushToCloud();
@@ -754,10 +756,10 @@
             buildStaticTable();
             recalculateAll();
 
-            // Consulta periódica de respaldo a la nube cada 3 segundos
+            // Consulta periódica de respaldo a la nube cada 2.5 segundos
             setInterval(() => {
                 pullFromCloud(false);
-            }, 3000);
+            }, 2500);
 
             // Reconexión instantánea al enfocar la ventana o cambiar de pestaña
             window.addEventListener('focus', () => {
