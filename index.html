@@ -95,12 +95,28 @@
                 </div>
             </div>
             
-            <!-- Fecha de Control del Sistema -->
-            <div class="glass-panel py-2 px-4 rounded-xl flex items-center gap-3 shadow-inner">
-                <i class="fa-regular fa-calendar-check text-emerald-400 animate-pulse"></i>
-                <div class="text-xs md:text-sm font-medium">
-                    <span class="text-slate-400">Fecha Control:</span> 
-                    <span id="current-date-badge" class="text-emerald-400 font-bold">12/07/2026</span>
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Indicador de Sincronización Multi-Dispositivo en la Nube -->
+                <button onclick="openSyncModal()" title="Haga clic para conectar sus dispositivos" class="glass-panel py-2 px-3.5 rounded-xl flex items-center gap-2.5 shadow-inner hover:bg-slate-800/80 transition group cursor-pointer border border-emerald-500/30">
+                    <span class="flex h-2.5 w-2.5 relative">
+                        <span id="sync-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span id="sync-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <i class="fa-solid fa-cloud-arrow-up text-emerald-400 text-xs"></i>
+                    <div class="text-xs text-left">
+                        <span class="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Sincronización Nube</span>
+                        <span id="sync-code-badge" class="text-emerald-400 font-bold">MI-CUENTA-2026</span>
+                    </div>
+                    <i class="fa-solid fa-pen-to-square text-slate-500 group-hover:text-emerald-400 text-xs ml-1 transition"></i>
+                </button>
+
+                <!-- Fecha de Control del Sistema -->
+                <div class="glass-panel py-2 px-4 rounded-xl flex items-center gap-3 shadow-inner">
+                    <i class="fa-regular fa-calendar-check text-emerald-400 animate-pulse"></i>
+                    <div class="text-xs md:text-sm font-medium">
+                        <span class="text-slate-400">Fecha Control:</span> 
+                        <span id="current-date-badge" class="text-emerald-400 font-bold">20/07/2026</span>
+                    </div>
                 </div>
             </div>
         </header>
@@ -152,7 +168,7 @@
 
         <!-- Notificación No Intrusiva -->
         <div id="custom-notification" class="fixed bottom-5 right-5 glass-panel border-l-4 border-emerald-500 py-3 px-5 rounded-xl shadow-2xl z-50 flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300">
-            <span class="text-emerald-400 text-lg">💰</span>
+            <span id="notification-icon" class="text-emerald-400 text-lg">💰</span>
             <p id="notification-text" class="text-xs font-semibold text-slate-200"></p>
         </div>
 
@@ -188,26 +204,63 @@
 
         <!-- Pie de página -->
         <footer class="text-center py-4 text-xs text-slate-500 flex justify-between items-center px-4">
-            <p>© 2026 Asesor Financiero Personal. Todos los cálculos están automatizados.</p>
+            <p>© 2026 Asesor Financiero Personal. Sincronizado en tiempo real entre tus dispositivos.</p>
             <div class="flex gap-4">
-                <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Sistema de Control Activo</span>
+                <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Nube Activa</span>
             </div>
         </footer>
 
     </div>
 
-    <!-- Script de lógica de negocio y cálculos financieros -->
+    <!-- Modal para Configurar Clave de Sincronización Multi-Dispositivo -->
+    <div id="sync-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden transition-all duration-300 opacity-0">
+        <div class="glass-panel rounded-2xl w-full max-w-md p-6 border border-slate-700/60 shadow-2xl transform scale-95 transition-all duration-300" id="sync-modal-card">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-rotate text-emerald-400 animate-spin"></i> Clave de Sincronización
+                </h3>
+                <button onclick="closeSyncModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Escribe un <strong>Código de Sincronización único</strong> (por ejemplo: <span class="text-emerald-400 font-bold">MI-CUENTA-2026</span> o tu nombre). Usa exactamente el mismo código en tu <strong>celular y laptop</strong> para compartir tus saldos al instante sin tener que volver a escribirlos.
+                </p>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tu Código / Clave Personal</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 text-slate-500 text-sm"><i class="fa-solid fa-key"></i></span>
+                        <input type="text" id="sync-code-input" placeholder="Ej: CARLOS2026" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl pl-10 pr-4 py-2.5 text-white font-bold tracking-wider uppercase text-sm focus:outline-none transition">
+                    </div>
+                </div>
+
+                <div class="p-3 bg-emerald-950/30 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300 flex items-start gap-2">
+                    <i class="fa-solid fa-shield-halved text-emerald-400 mt-0.5 text-sm"></i>
+                    <span>Tus saldos se actualizarán automáticamente en la pantalla de tu otro dispositivo tan pronto hagas un cambio.</span>
+                </div>
+
+                <div class="pt-3 flex justify-end gap-3">
+                    <button onclick="closeSyncModal()" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-sm font-semibold">Cancelar</button>
+                    <button onclick="saveSyncCode()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold transition text-sm shadow-lg shadow-emerald-500/20">Conectar y Sincronizar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        /* Datos por defecto basados exactamente en tu planilla Excel original */
+        /* Datos por defecto basados en la planilla Excel original */
         const DEFAULT_CATEGORIES = [
             {
                 id: 'cat_movilidad',
                 name: 'MOVILIDAD',
                 color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
                 headerColor: 'bg-emerald-500 text-slate-950',
-                daysType: 'working', /* Lunes a Viernes únicamente */
+                daysType: 'working',
                 start: '2026-06-22',
-                actual: '2026-07-12', /* Sábado/Domingo de control */
+                actual: '2026-07-20',
                 end: '2026-07-22',
                 income: 77.00,
                 saldoTarjeta: 42.00
@@ -217,9 +270,9 @@
                 name: 'DESAY MENU L-V',
                 color: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
                 headerColor: 'bg-amber-400 text-slate-950',
-                daysType: 'working', /* Lunes a Viernes únicamente */
+                daysType: 'working',
                 start: '2026-06-22',
-                actual: '2026-07-12',
+                actual: '2026-07-20',
                 end: '2026-07-22',
                 income: 319.00,
                 saldoTarjeta: 174.00
@@ -229,18 +282,26 @@
                 name: 'MENU SABA',
                 color: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
                 headerColor: 'bg-orange-500 text-slate-950',
-                daysType: 'saturday', /* Solo Sábados */
+                daysType: 'saturday',
                 start: '2026-06-22',
-                actual: '2026-07-12',
+                actual: '2026-07-20',
                 end: '2026-07-22',
                 income: 48.00,
                 saldoTarjeta: 0.00
             }
         ];
 
-        /* Inicialización Segura del Estado (Previene caídas por datos corruptos en Local Storage) */
+        /* Variables de Estado Global */
         let state = { categories: [] };
+        let currentSyncCode = 'MI-CUENTA-2026';
+        let lastLocalUpdateTimestamp = 0;
+        let isSyncingWithCloud = false;
+
         const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v6';
+        const SYNC_CODE_STORAGE_KEY = 'premium_budget_sync_code_v1';
+        
+        /* Servidor de Sincronización en la Nube (API REST en tiempo real con alta disponibilidad) */
+        const CLOUD_SYNC_ENDPOINT = 'https://gastos-app-2026-default-rtdb.firebaseio.com/sync/';
 
         /* Función para obtener la fecha de hoy en huso local del dispositivo */
         function getLocalDateString() {
@@ -260,6 +321,14 @@
         }
 
         function initApp() {
+            // Cargar Código de Sincronización guardado o usar el por defecto
+            const savedCode = localStorage.getItem(SYNC_CODE_STORAGE_KEY);
+            if (savedCode && savedCode.trim() !== '') {
+                currentSyncCode = savedCode.trim().toUpperCase();
+            }
+
+            updateSyncBadgeText(currentSyncCode);
+
             try {
                 const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
                 let parsed = null;
@@ -267,10 +336,8 @@
                     parsed = JSON.parse(storedData);
                 }
 
-                // Fijamos la estructura exacta de las 3 categorías por defecto
                 state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
 
-                // Si hay datos locales, los restauramos de forma segura para las categorías válidas
                 if (Array.isArray(parsed)) {
                     parsed.forEach(savedCat => {
                         const target = state.categories.find(c => c.id === savedCat.id);
@@ -298,6 +365,106 @@
             if (badge) {
                 badge.innerText = formatDateToDisplay(todayStr);
             }
+
+            // Iniciar sincronización inicial con la nube
+            pullFromCloud(true);
+        }
+
+        function updateSyncBadgeText(code) {
+            const el = document.getElementById('sync-code-badge');
+            if (el) el.innerText = code;
+        }
+
+        /* Enviar datos actualizados a la Nube */
+        function pushToCloud() {
+            if (!currentSyncCode) return;
+            
+            const sanitizedCode = currentSyncCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const url = `${CLOUD_SYNC_ENDPOINT}${sanitizedCode}.json`;
+            const nowTs = Date.now();
+            lastLocalUpdateTimestamp = nowTs;
+
+            const payload = {
+                categories: state.categories,
+                updatedAt: nowTs
+            };
+
+            const ping = document.getElementById('sync-ping');
+            const dot = document.getElementById('sync-dot');
+            if (ping) ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+            if (dot) dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500";
+
+            fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (res.ok) {
+                    if (ping) ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                    if (dot) dot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
+                }
+            })
+            .catch(err => {
+                console.warn("Nube en modo offline local.", err);
+            });
+        }
+
+        /* Recibir datos más recientes desde la Nube */
+        function pullFromCloud(isInitial = false) {
+            if (!currentSyncCode || isSyncingWithCloud) return;
+
+            isSyncingWithCloud = true;
+            const sanitizedCode = currentSyncCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const url = `${CLOUD_SYNC_ENDPOINT}${sanitizedCode}.json`;
+
+            fetch(url)
+            .then(res => res.json())
+            .then(cloudData => {
+                isSyncingWithCloud = false;
+                if (cloudData && Array.isArray(cloudData.categories) && cloudData.updatedAt) {
+                    if (cloudData.updatedAt > lastLocalUpdateTimestamp) {
+                        lastLocalUpdateTimestamp = cloudData.updatedAt;
+                        
+                        // Actualizar saldos y fechas desde la nube
+                        let hasChanges = false;
+                        cloudData.categories.forEach(remoteCat => {
+                            const localTarget = state.categories.find(c => c.id === remoteCat.id);
+                            if (localTarget) {
+                                if (localTarget.saldoTarjeta !== remoteCat.saldoTarjeta) {
+                                    localTarget.saldoTarjeta = remoteCat.saldoTarjeta;
+                                    hasChanges = true;
+                                }
+                                if (remoteCat.income !== undefined) localTarget.income = remoteCat.income;
+                                if (remoteCat.start) localTarget.start = remoteCat.start;
+                                if (remoteCat.end) localTarget.end = remoteCat.end;
+                            }
+                        });
+
+                        if (hasChanges || isInitial) {
+                            // Actualizar inputs visibles sin quitar el foco activo
+                            state.categories.forEach((cat, cIdx) => {
+                                const inputEl = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
+                                if (inputEl && document.activeElement !== inputEl) {
+                                    inputEl.value = parseFloat(cat.saldoTarjeta || 0).toFixed(2);
+                                }
+                            });
+
+                            recalculateAll();
+                            if (!isInitial && hasChanges) {
+                                showNotification("📲 ¡Saldos sincronizados desde tu otro dispositivo!", "☁️");
+                            }
+                        }
+                    }
+                } else if (isInitial) {
+                    // Si el código es totalmente nuevo en la nube, subimos nuestro estado inicial
+                    pushToCloud();
+                }
+            })
+            .catch(err => {
+                isSyncingWithCloud = false;
+                console.warn("No se pudo conectar a la nube temporalmente.", err);
+            });
         }
 
         /* Calcula de forma robusta los días útiles para amortizaciones omitiendo fines de semana o filtrando sábados */
@@ -470,7 +637,7 @@
             });
         }
 
-        /* Actualiza y recalcula únicamente el contenido de texto (mantiene el cursor activo y evita saltos de pantalla) */
+        /* Actualiza y recalcula únicamente el contenido de texto */
         function recalculateAll() {
             let totals = {
                 income: 0,
@@ -481,7 +648,6 @@
             };
 
             state.categories.forEach((cat, cIdx) => {
-                // Cálculo de días calendario e individuales
                 const cuantos_dias = calculateCalendarDaysRemaining(cat.actual, cat.end);
                 
                 const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
@@ -510,7 +676,6 @@
                     elFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(faltante)}</span>`;
                 }
 
-                // Sumarizadores globales
                 totals.income += cat.income;
                 totals.gasto_por_dia += gasto_por_dia;
                 totals.resultado_saldo += resultado_saldo;
@@ -546,7 +711,6 @@
             if (elInc) elInc.innerText = formatPEN(totals.income);
             if (elCrd) elCrd.innerText = formatPEN(totals.saldoTarjeta);
 
-            // Calcular el faltante total neto real (solo de los ítems en déficit)
             let sumDeficitOnly = 0;
             let categoriesWithDeficit = [];
             state.categories.forEach(cat => {
@@ -579,7 +743,7 @@
                 }
             }
 
-            // Guardar al milisegundo en localStorage de forma 100% segura
+            // Guardar en Local Storage
             try {
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state.categories));
             } catch (err) {
@@ -587,33 +751,113 @@
             }
         }
 
-        /* Actualización inmediata del estado en memoria y del almacenamiento local al escribir */
+        /* Actualización inmediata del estado y sincronización a la Nube al escribir */
         function updateNumericValue(categoryIndex, key, valString) {
             const numericValue = parseFloat(valString) || 0;
             if (state.categories[categoryIndex]) {
                 state.categories[categoryIndex][key] = numericValue;
-                recalculateAll(); // Actualización visual ultra-rápida en tiempo real
+                recalculateAll();
+                pushToCloud(); // Sincronizar instantáneamente a celular/laptop
             }
         }
 
-        /* Formateador visual que agrega dos decimales al perder el foco */
         function formatNumericInput(inputEl) {
             const val = parseFloat(inputEl.value) || 0;
             inputEl.value = val.toFixed(2);
         }
 
-        /* Manejo de cambio en los calendarios editables */
         function updateValue(categoryIndex, key, value) {
             if (state.categories[categoryIndex]) {
                 state.categories[categoryIndex][key] = value;
                 recalculateAll();
+                pushToCloud();
             }
+        }
+
+        function showNotification(message, icon = "💰") {
+            const notif = document.getElementById('custom-notification');
+            const text = document.getElementById('notification-text');
+            const iconEl = document.getElementById('notification-icon');
+            
+            if (notif && text) {
+                text.innerText = message;
+                if (iconEl) iconEl.innerText = icon;
+                notif.classList.remove('translate-y-20', 'opacity-0');
+                notif.classList.add('translate-y-0', 'opacity-100');
+                setTimeout(() => {
+                    notif.classList.remove('translate-y-0', 'opacity-100');
+                    notif.classList.add('translate-y-20', 'opacity-0');
+                }, 3500);
+            }
+        }
+
+        /* Funciones del Modal de Sincronización */
+        function openSyncModal() {
+            const modal = document.getElementById('sync-modal');
+            const card = document.getElementById('sync-modal-card');
+            const input = document.getElementById('sync-code-input');
+            
+            if (input) input.value = currentSyncCode;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+            }, 15);
+        }
+
+        function closeSyncModal() {
+            const modal = document.getElementById('sync-modal');
+            const card = document.getElementById('sync-modal-card');
+            modal.classList.remove('opacity-100');
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function saveSyncCode() {
+            const input = document.getElementById('sync-code-input');
+            if (!input) return;
+            
+            const newCode = input.value.trim().toUpperCase();
+            if (!newCode) {
+                showNotification("¡Por favor escribe una clave válida!", "⚠️");
+                return;
+            }
+
+            currentSyncCode = newCode;
+            localStorage.setItem(SYNC_CODE_STORAGE_KEY, currentSyncCode);
+            updateSyncBadgeText(currentSyncCode);
+            
+            closeSyncModal();
+            showNotification(`¡Conectado al canal ${currentSyncCode}! Sincronizando...`, "☁️");
+            
+            pullFromCloud(true);
         }
 
         window.onload = function() {
             initApp();
             buildStaticTable();
             recalculateAll();
+
+            // Polling en segundo plano cada 3 segundos para sincronizar automáticamente con otros dispositivos
+            setInterval(() => {
+                pullFromCloud(false);
+            }, 3000);
+
+            // Al volver a enfocar la pestaña en celular o laptop, forzar una actualización rápida
+            window.addEventListener('focus', () => {
+                pullFromCloud(false);
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    pullFromCloud(false);
+                }
+            });
         }
     </script>
 </body>
