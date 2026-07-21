@@ -157,7 +157,7 @@
                     <h2 class="text-lg font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-table text-emerald-400"></i> Cuadro de Control Operativo
                     </h2>
-                    <p class="text-xs text-slate-400 mt-1">Todos los campos numéricos y de fechas son 100% editables. Se recalculan y sincronizan automáticamente.</p>
+                    <p class="text-xs text-slate-400 mt-1">Todos los campos numéricos y de fechas son 100% editables. Se recalculan y sincronizan automáticamente entre tus dispositivos.</p>
                 </div>
                 <div class="flex items-center gap-2 bg-slate-950/60 p-2 rounded-lg border border-slate-800">
                     <span class="text-[11px] text-slate-400 font-medium">Borde Rojo =</span>
@@ -180,11 +180,13 @@
             </div>
         </main>
 
-        <!-- Pie de página -->
+        <!-- Pie de página con indicador de sincronización activa -->
         <footer class="text-center py-4 text-xs text-slate-500 flex justify-between items-center px-4">
             <p>© 2026 Asesor Financiero Personal. Sincronizado automáticamente entre tus dispositivos.</p>
             <div class="flex gap-4">
-                <span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Nube Activa</span>
+                <span id="cloud-status-badge" class="flex items-center gap-1.5 font-semibold text-emerald-400">
+                    <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Nube Activa - Sincronizado
+                </span>
             </div>
         </footer>
 
@@ -234,16 +236,13 @@
         /* Variables de Estado Global */
         let state = { categories: [] };
         let isSyncingWithCloud = false;
-        
-        // Identificador único de dispositivo para ignorar eco propio
-        const deviceId = 'dev_' + Math.random().toString(36).substring(2, 9);
-        let activeEventSource = null;
+        let initialSyncCompleted = false;
         let pushDebounceTimer = null;
 
-        const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v6';
+        const LOCAL_STORAGE_KEY = 'premium_budget_state_aligned_v7';
         
-        /* Canaleta de Sincronización Nube Única Fija e Invisible */
-        const CLOUD_SYNC_ENDPOINT = 'https://gastos-app-2026-default-rtdb.firebaseio.com/sync/MI-CUENTA-2026.json';
+        /* Canaleta de Sincronización REST Pública Permanente */
+        const CLOUD_SYNC_ENDPOINT = 'https://jsonblob.com/api/jsonBlob/13425167283910298371';
 
         /* Obtiene la fecha local de hoy en YYYY-MM-DD */
         function getLocalDateString() {
@@ -300,98 +299,89 @@
                 badge.innerText = formatDateToDisplay(todayStr);
             }
 
-            // Conectar sincronización automática en segundo plano
+            // Descargar primeramente la información de la nube
             pullFromCloud(true);
-            connectRealtimeSync();
         }
 
         function pushToCloud() {
-            const nowTs = Date.now();
+            if (!initialSyncCompleted) return;
+
+            updateCloudBadge('saving', 'Guardando en Nube...');
 
             const payload = {
                 categories: state.categories,
-                senderId: deviceId,
-                updatedAt: nowTs
+                updatedAt: Date.now()
             };
 
             fetch(CLOUD_SYNC_ENDPOINT, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify(payload)
-            }).catch(err => {
+            })
+            .then(res => {
+                if (res.ok) {
+                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
+                } else {
+                    updateCloudBadge('error', 'Error al Guardar');
+                }
+            })
+            .catch(err => {
                 console.warn("Nube en modo offline local.", err);
+                updateCloudBadge('offline', 'Modo Offline');
             });
         }
 
-        /* Escuchar cambios en Tiempo Real mediante SSE (EventSource) */
-        function connectRealtimeSync() {
-            if (activeEventSource) {
-                activeEventSource.close();
-                activeEventSource = null;
-            }
-
-            try {
-                activeEventSource = new EventSource(CLOUD_SYNC_ENDPOINT);
-
-                activeEventSource.addEventListener('put', (e) => {
-                    handleCloudSSEEvent(e.data);
-                });
-
-                activeEventSource.addEventListener('patch', (e) => {
-                    handleCloudSSEEvent(e.data);
-                });
-            } catch (err) {
-                console.warn("No se pudo iniciar listener SSE.", err);
-            }
-        }
-
-        /* Procesar actualizaciones instantáneas desde el otro dispositivo */
-        function handleCloudSSEEvent(rawJson) {
-            try {
-                const sseData = JSON.parse(rawJson);
-                if (!sseData || !sseData.data) return;
-
-                const payload = sseData.data;
-
-                // Si fue enviado por este mismo dispositivo, ignorar para evitar bucles
-                if (payload.senderId === deviceId) {
-                    return;
-                }
-
-                if (Array.isArray(payload.categories)) {
-                    applyRemoteCategories(payload.categories);
-                } else {
-                    pullFromCloud(false);
-                }
-            } catch (err) {
-                console.error("Error al procesar mensaje de la nube:", err);
-            }
-        }
-
-        /* Solicitar datos más recientes mediante REST GET */
         function pullFromCloud(isInitial = false) {
             if (isSyncingWithCloud) return;
-
             isSyncingWithCloud = true;
 
-            fetch(CLOUD_SYNC_ENDPOINT)
-            .then(res => res.json())
+            fetch(CLOUD_SYNC_ENDPOINT, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(res => {
+                if (res.status === 404 && isInitial) {
+                    // Si el blob no existía aún, lo creamos con POST
+                    return createCloudBlob();
+                }
+                return res.json();
+            })
             .then(cloudData => {
                 isSyncingWithCloud = false;
+                initialSyncCompleted = true;
+
                 if (cloudData && Array.isArray(cloudData.categories)) {
-                    if (cloudData.senderId !== deviceId || isInitial) {
-                        applyRemoteCategories(cloudData.categories, isInitial);
-                    }
-                } else if (isInitial) {
-                    pushToCloud();
+                    applyRemoteCategories(cloudData.categories, isInitial);
+                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
                 }
             })
             .catch(err => {
                 isSyncingWithCloud = false;
+                initialSyncCompleted = true;
+                updateCloudBadge('offline', 'Modo Offline');
             });
         }
 
-        /* Aplica los saldos en pantalla automáticamente */
+        /* Crea la canaleta inicial si el servidor la requiere */
+        function createCloudBlob() {
+            const payload = {
+                categories: state.categories,
+                updatedAt: Date.now()
+            };
+
+            return fetch(CLOUD_SYNC_ENDPOINT, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            }).then(() => payload);
+        }
+
         function applyRemoteCategories(remoteCategories, isInitial = false) {
             let hasChanges = false;
             
@@ -418,7 +408,7 @@
             });
 
             if (hasChanges || isInitial) {
-                // Actualizar los valores en pantalla si la celda no está siendo editada activamente
+                // Actualizar las celdas en pantalla si el usuario no las está editando en este preciso instante
                 state.categories.forEach((cat, cIdx) => {
                     const inputEl = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
                     if (inputEl && document.activeElement !== inputEl) {
@@ -442,6 +432,23 @@
                 });
 
                 recalculateAll();
+            }
+        }
+
+        /* Cambia el texto del indicador visual de la nube */
+        function updateCloudBadge(type, text) {
+            const badge = document.getElementById('cloud-status-badge');
+            if (!badge) return;
+
+            if (type === 'success') {
+                badge.className = 'flex items-center gap-1.5 font-semibold text-emerald-400';
+                badge.innerHTML = `<span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span> ${text}`;
+            } else if (type === 'saving') {
+                badge.className = 'flex items-center gap-1.5 font-semibold text-amber-400';
+                badge.innerHTML = `<span class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-ping"></span> ${text}`;
+            } else {
+                badge.className = 'flex items-center gap-1.5 font-semibold text-slate-400';
+                badge.innerHTML = `<span class="h-2.5 w-2.5 rounded-full bg-slate-500"></span> ${text}`;
             }
         }
 
@@ -708,17 +715,18 @@
             }
         }
 
+        /* Manejadores de eventos de entrada numérica */
         function updateNumericValue(categoryIndex, key, valString) {
             const numericValue = parseFloat(valString) || 0;
             if (state.categories[categoryIndex]) {
                 state.categories[categoryIndex][key] = numericValue;
                 recalculateAll();
 
-                // Programar envío silencioso a la nube
+                // Programar envío automático a la nube con rebote inteligente
                 clearTimeout(pushDebounceTimer);
                 pushDebounceTimer = setTimeout(() => {
                     pushToCloud();
-                }, 350);
+                }, 400);
             }
         }
 
@@ -741,27 +749,24 @@
             }
         }
 
-        /* Arranque del sistema */
         window.onload = function() {
             initApp();
             buildStaticTable();
             recalculateAll();
 
-            // Polling de respaldo cada 4 segundos
+            // Consulta periódica de respaldo a la nube cada 3 segundos
             setInterval(() => {
                 pullFromCloud(false);
-            }, 4000);
+            }, 3000);
 
             // Reconexión instantánea al enfocar la ventana o cambiar de pestaña
             window.addEventListener('focus', () => {
                 pullFromCloud(false);
-                connectRealtimeSync();
             });
 
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
                     pullFromCloud(false);
-                    connectRealtimeSync();
                 }
             });
         }
