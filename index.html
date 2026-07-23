@@ -41,9 +41,9 @@
         }
         /* Estilo general para paneles con efecto glassmorphism */
         .glass-panel {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.75);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
         /* Inputs de fecha nativos estilizados */
         input[type="date"]::-webkit-calendar-picker-indicator {
@@ -75,41 +75,79 @@
         }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-3 sm:p-6 md:p-8 relative">
+
+    <!-- Overlay para cerrar el menú en móviles -->
+    <div id="sidebar-overlay" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
+
+    <!-- Menú Lateral Oculto por Defecto (Sidebar por Carpetas con Sub-Menús) -->
+    <aside id="sidebar-menu" class="fixed top-0 left-0 h-full w-80 glass-panel z-50 transform -translate-x-full transition-transform duration-300 shadow-2xl flex flex-col justify-between p-5 border-r border-slate-800">
+        <div>
+            <!-- Cabecera del Menú -->
+            <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                        <i class="fa-solid fa-folder-closed text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-white text-base">Mis Carpetas</h2>
+                        <p class="text-[11px] text-slate-400">Módulos y Sub-Módulos</p>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar(false)" class="p-2 text-slate-400 hover:text-white transition rounded-lg hover:bg-slate-800">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Lista Dinámica de Módulos / Carpetas y Sub-Menús -->
+            <div class="space-y-2" id="modules-list-container">
+                <!-- Se renderiza mediante renderSidebarNav() -->
+            </div>
+        </div>
+
+        <!-- Botón para Crear Nueva Carpeta Personalizada -->
+        <div class="pt-4 border-t border-slate-800">
+            <button onclick="createNewFolderPrompt()" class="w-full py-2.5 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-xl border border-emerald-500/30 transition flex items-center justify-center gap-2 text-xs">
+                <i class="fa-solid fa-plus"></i> Crear Nueva Carpeta
+            </button>
+        </div>
+    </aside>
 
     <div class="max-w-7xl mx-auto space-y-6">
         
-        <!-- Cabecera de la Aplicación -->
+        <!-- Cabecera Principal de la Aplicación -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800">
-            <div>
-                <div class="flex items-center gap-3">
-                    <div class="p-2.5 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl shadow-lg shadow-emerald-500/20">
-                        <i class="fa-solid fa-wallet text-xl text-slate-950"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-                            Asesor de Gastos Inteligente
-                        </h1>
-                        <p class="text-sm text-slate-400">Control operativo de flujos y balances de caja en tiempo real</p>
-                    </div>
+            <div class="flex items-center gap-3">
+                <!-- Botón Hamburguesa para abrir el Menú Lateral -->
+                <button onclick="toggleSidebar(true)" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-emerald-400 rounded-xl transition flex items-center gap-2 shadow-lg group active:scale-95" title="Abrir Módulos">
+                    <i class="fa-solid fa-bars text-lg group-hover:rotate-180 transition duration-300"></i>
+                    <span class="text-xs font-bold text-white uppercase tracking-wider hidden sm:inline">Módulos</span>
+                </button>
+
+                <div class="p-2.5 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl shadow-lg shadow-emerald-500/20">
+                    <i id="header-icon" class="fa-solid fa-wallet text-xl text-slate-950"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent" id="header-module-title">
+                        Control de Gastos Operativos
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-400" id="header-module-subtitle">Control operativo de flujos y balances diarios</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
-                <!-- Fecha de Control del Sistema -->
-                <div class="glass-panel py-2 px-4 rounded-xl flex items-center gap-3 shadow-inner">
+            <!-- Fecha de Control del Sistema -->
+            <div class="glass-panel py-2 px-4 rounded-xl flex items-center gap-3 shadow-inner self-stretch sm:self-auto justify-between sm:justify-start">
+                <div class="flex items-center gap-2">
                     <i class="fa-regular fa-calendar-check text-emerald-400 animate-pulse"></i>
-                    <div class="text-xs md:text-sm font-medium">
-                        <span class="text-slate-400">Fecha Control:</span> 
-                        <span id="current-date-badge" class="text-emerald-400 font-bold">--/--/----</span>
-                    </div>
+                    <span class="text-xs md:text-sm font-medium text-slate-400">Fecha Control:</span>
                 </div>
+                <span id="current-date-badge" class="text-emerald-400 text-xs md:text-sm font-black">--/--/----</span>
             </div>
         </header>
 
-        <!-- Módulo del Asesor Inteligente -->
-        <section class="w-full">
-            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+        <!-- Módulo del Asesor Inteligente (Para Control de Gastos) -->
+        <section class="w-full" id="advisor-section">
+            <div class="glass-panel p-4 sm:p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
                 <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl"></div>
                 
@@ -121,346 +159,75 @@
                         </span>
                         <h2 class="text-xs font-bold uppercase tracking-widest text-emerald-400">Recomendación de tu Asesor Personal</h2>
                     </div>
-                    <div class="flex items-start gap-4">
-                        <div class="text-3xl">🤖</div>
+                    <div class="flex items-start gap-3 sm:gap-4">
+                        <div class="text-2xl sm:text-3xl">🤖</div>
                         <div>
-                            <h3 class="text-lg font-bold text-white mb-1" id="advisor-title">Analizando tus saldos...</h3>
-                            <p class="text-sm text-slate-300 leading-relaxed" id="advisor-advice">
-                                Introduce tus saldos en la línea roja de abajo para darte un diagnóstico preciso de tus finanzas.
+                            <h3 class="text-base sm:text-lg font-bold text-white mb-1" id="advisor-title">Analizando tus saldos...</h3>
+                            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed" id="advisor-advice">
+                                Cargando información financiera...
                             </p>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Resumen de Métricas -->
-                <div class="grid grid-cols-3 gap-4 pt-6 mt-6 border-t border-slate-800/60 text-center">
-                    <div>
-                        <p class="text-xs text-slate-400">Presupuesto Inicial</p>
-                        <p class="text-lg font-bold text-emerald-400" id="total-income-stat">S/ 0.00</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-400">Saldo Tarjeta Total</p>
-                        <p class="text-lg font-bold text-sky-400" id="total-card-stat">S/ 0.00</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-400">Faltante Neto</p>
-                        <p class="text-lg font-bold text-rose-400" id="total-deficit-stat">S/ 0.00</p>
-                    </div>
+                <!-- Resumen de Métricas Dinámico -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-4 sm:pt-6 mt-4 sm:mt-6 border-t border-slate-800/60 text-center" id="advisor-stats-grid">
+                    <!-- Renderizado dinámico -->
                 </div>
             </div>
         </section>
 
-        <!-- Contenedor Principal de la Tabla de Control -->
-        <main class="glass-panel rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
-            <div class="p-6 border-b border-slate-800/80 bg-slate-900/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <!-- Widget Visual "Mi Tarjeta (Interbank + BBVA + Asesor)" para Módulo de Tarjetas de Crédito -->
+        <section id="card-app-widget-container" class="w-full space-y-6 hidden">
+            <!-- Se renderiza dinámicamente mediante renderCardAppWidget() -->
+        </section>
+
+        <!-- Contenedor Principal de la Tabla de Control de Gastos -->
+        <main class="glass-panel rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative">
+            <div class="p-4 sm:p-6 border-b border-slate-800/80 bg-slate-900/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2" id="table-title">
                         <i class="fa-solid fa-table text-emerald-400"></i> Cuadro de Control Operativo
                     </h2>
-                    <p class="text-xs text-slate-400 mt-1">Todos los campos numéricos y de fechas son 100% editables. Se recalculan y sincronizan automáticamente entre tus dispositivos.</p>
+                    <p class="text-xs text-slate-400 mt-1">Todos los campos numéricos y de fechas son 100% editables mediante calendarios interactivos. Se recalculan al instante.</p>
                 </div>
                 <div class="flex items-center gap-2 bg-slate-950/60 p-2 rounded-lg border border-slate-800">
                     <span class="text-[11px] text-slate-400 font-medium">Borde Rojo =</span>
-                    <span class="px-2 py-0.5 bg-rose-500/15 text-rose-400 text-[10px] font-black rounded border border-rose-500/30 uppercase tracking-wider animate-pulse">Línea de Saldo Editable (Soles)</span>
+                    <span class="px-2 py-0.5 bg-rose-500/15 text-rose-400 text-[10px] font-black rounded border border-rose-500/30 uppercase tracking-wider animate-pulse">Línea Editable (Soles)</span>
                 </div>
             </div>
 
             <!-- Contenedor Responsivo para evitar desbordes -->
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[1000px] border-collapse text-left text-sm table-fixed">
+                <table class="w-full min-w-[900px] border-collapse text-left text-sm table-fixed">
                     <thead>
                         <tr class="bg-slate-950/85 border-b border-slate-800" id="table-header-row">
-                            <!-- Cabeceras renderizadas de forma dinámica -->
+                            <!-- Cabeceras renderizadas dinámicamente -->
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-800/40" id="spreadsheet-body">
-                        <!-- Filas de datos cargadas por JS -->
+                        <!-- Filas de datos -->
                     </tbody>
                 </table>
             </div>
         </main>
 
-        <!-- Pie de página con indicador de sincronización activa y botón manual -->
-        <footer class="text-center py-4 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center px-4 gap-3">
-            <p>© 2026 Asesor Financiero Personal. Sincronizado automáticamente entre tus dispositivos.</p>
-            <div class="flex items-center gap-3">
-                <span id="cloud-status-badge" class="flex items-center gap-1.5 font-semibold text-emerald-400">
-                    <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Nube Activa - Sincronizado
+        <!-- Pie de página -->
+        <footer class="text-center py-4 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2 px-4">
+            <p>© 2026 Asesor Financiero Personal. Sistema de Control Operativo.</p>
+            <div class="flex items-center gap-2">
+                <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <button onclick="triggerManualSync()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 border border-slate-700" title="Sincronizar Manualmente">
-                    <i id="sync-icon" class="fa-solid fa-rotate text-emerald-400"></i> Sincronizar
-                </button>
+                <span class="text-slate-400 font-medium">Sincronización Local Activa</span>
             </div>
         </footer>
 
     </div>
 
-    <!-- Script de lógica de negocio y motor de sincronización global en la nube -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        /* Datos por defecto basados en la planilla Excel original */
-        const DEFAULT_CATEGORIES = [
-            {
-                id: 'cat_movilidad',
-                name: 'MOVILIDAD',
-                color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
-                headerColor: 'bg-emerald-500 text-slate-950',
-                daysType: 'working',
-                start: '2026-06-22',
-                actual: '2026-07-20',
-                end: '2026-07-22',
-                income: 77.00,
-                saldoTarjeta: 42.00
-            },
-            {
-                id: 'cat_desayuno',
-                name: 'DESAY MENU L-V',
-                color: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-                headerColor: 'bg-amber-400 text-slate-950',
-                daysType: 'working',
-                start: '2026-06-22',
-                actual: '2026-07-20',
-                end: '2026-07-22',
-                income: 319.00,
-                saldoTarjeta: 174.00
-            },
-            {
-                id: 'cat_saba',
-                name: 'MENU SABA',
-                color: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
-                headerColor: 'bg-orange-500 text-slate-950',
-                daysType: 'saturday',
-                start: '2026-06-22',
-                actual: '2026-07-20',
-                end: '2026-07-22',
-                income: 48.00,
-                saldoTarjeta: 0.00
-            }
-        ];
-
-        /* Variables de Estado Global */
-        window.state = { categories: [], lastUpdated: 0 };
-        let pushDebounceTimer = null;
-        let dbDocRef = null;
-        let authUser = null;
-
-        const LOCAL_STORAGE_KEY = 'premium_budget_state_v10';
-        
-        // Identificador público único para compartir entre tus dispositivos en la nube de Vercel
-        const SHARED_CLOUD_OBJECT_ID = 'ff8081819322e16d0193282b0f4d0001';
-        const REST_API_URL = `https://api.restful-api.dev/objects/${SHARED_CLOUD_OBJECT_ID}`;
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'gastos-app-default';
-        const docId = 'public_budget_state';
-
-        /* Inicializador de Firebase & Sincronización Global en la Nube */
-        async function setupCloudSync() {
-            try {
-                if (typeof __firebase_config !== 'undefined') {
-                    const firebaseConfig = JSON.parse(__firebase_config);
-                    const app = initializeApp(firebaseConfig);
-                    const auth = getAuth(app);
-                    const db = getFirestore(app);
-
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-
-                    authUser = auth.currentUser;
-
-                    if (authUser) {
-                        dbDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'budget_store', docId);
-
-                        // Escuchar cambios en tiempo real desde la nube de Firebase
-                        onSnapshot(dbDocRef, (docSnap) => {
-                            if (docSnap.exists()) {
-                                const remoteData = docSnap.data();
-                                applyRemoteData(remoteData);
-                            }
-                        }, (err) => {
-                            console.warn("Firestore snapshot fallback:", err);
-                            setupHttpFallback();
-                        });
-                        return;
-                    }
-                }
-                setupHttpFallback();
-            } catch (err) {
-                console.warn("Fallback activo:", err);
-                setupHttpFallback();
-            }
-        }
-
-        /* Motor de Sincronización Nube para despliegue en Vercel (PC Principal <-> PC Remoto <-> Celular) */
-        function setupHttpFallback() {
-            updateCloudBadge('success', 'Nube Activa - Sincronizado');
-            
-            // Descarga inicial desde la nube
-            fetchFromPublicCloud();
-
-            // Consulta periódica automática cada 2 segundos
-            setInterval(() => {
-                fetchFromPublicCloud();
-            }, 2000);
-
-            // Consulta cuando la ventana recupera el enfoque o se cambia de pestaña
-            window.addEventListener('focus', () => {
-                fetchFromPublicCloud();
-            });
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) {
-                    fetchFromPublicCloud();
-                }
-            });
-        }
-
-        /* Consulta los datos compartidos en la nube pública */
-        async function fetchFromPublicCloud() {
-            try {
-                const res = await fetch(REST_API_URL, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                if (res.ok) {
-                    const result = await res.json();
-                    const remoteData = result.data || result;
-                    if (remoteData && remoteData.categories) {
-                        applyRemoteData(remoteData);
-                    }
-                } else if (res.status === 404) {
-                    await saveToCloud();
-                }
-            } catch (e) {
-                // Fallback a almacenamiento de respaldo
-                syncWithLocalStorage();
-            }
-        }
-
-        function syncWithLocalStorage() {
-            try {
-                const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    if (parsed && parsed.updatedAt && parsed.updatedAt > window.state.lastUpdated) {
-                        applyRemoteData(parsed);
-                    }
-                }
-            } catch(e) {}
-        }
-
-        /* Aplica los datos remotos a los controles activos de la pantalla */
-        function applyRemoteData(remoteData) {
-            if (!remoteData || !Array.isArray(remoteData.categories)) return;
-            
-            const remoteTime = remoteData.updatedAt || 0;
-            // Solo aplicar si los datos remotos son más recientes que los locales
-            if (remoteTime <= window.state.lastUpdated && window.state.lastUpdated !== 0) return;
-
-            window.state.lastUpdated = remoteTime;
-
-            remoteData.categories.forEach(remoteCat => {
-                const localCat = window.state.categories.find(c => c.id === remoteCat.id);
-                if (localCat) {
-                    if (remoteCat.saldoTarjeta !== undefined) localCat.saldoTarjeta = parseFloat(remoteCat.saldoTarjeta) || 0;
-                    if (remoteCat.income !== undefined) localCat.income = parseFloat(remoteCat.income) || 0;
-                    if (remoteCat.start) localCat.start = remoteCat.start;
-                    if (remoteCat.end) localCat.end = remoteCat.end;
-                }
-            });
-
-            // Actualizar inputs en pantalla si el usuario no está escribiendo activamente en ellos
-            window.state.categories.forEach((cat, cIdx) => {
-                const inputCard = document.getElementById(`input-saldo_tarjeta-${cIdx}`);
-                if (inputCard && document.activeElement !== inputCard) {
-                    inputCard.value = parseFloat(cat.saldoTarjeta || 0).toFixed(2);
-                }
-
-                const inputInc = document.getElementById(`input-ingreso_gasto-${cIdx}`);
-                if (inputInc && document.activeElement !== inputInc) {
-                    inputInc.value = parseFloat(cat.income || 0).toFixed(2);
-                }
-
-                const inputStart = document.getElementById(`input-fecha_inicio-${cIdx}`);
-                if (inputStart && document.activeElement !== inputStart) {
-                    inputStart.value = cat.start;
-                }
-
-                const inputEnd = document.getElementById(`input-fecha_termino-${cIdx}`);
-                if (inputEnd && document.activeElement !== inputEnd) {
-                    inputEnd.value = cat.end;
-                }
-            });
-
-            recalculateAll();
-            updateCloudBadge('success', 'Nube Activa - Sincronizado');
-        }
-
-        /* Envía los cambios locales a la nube compartida */
-        async function saveToCloud() {
-            updateCloudBadge('saving', 'Sincronizando...');
-            window.state.lastUpdated = Date.now();
-
-            const payload = {
-                categories: window.state.categories,
-                updatedAt: window.state.lastUpdated
-            };
-
-            // Guardar localmente
-            try {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
-            } catch(e) {}
-
-            // Guardar en Firestore si está disponible
-            if (dbDocRef && authUser) {
-                try {
-                    await setDoc(dbDocRef, payload, { merge: true });
-                    updateCloudBadge('success', 'Nube Activa - Sincronizado');
-                    return;
-                } catch(e) {}
-            }
-
-            // Guardar en la nube pública de REST API para sincro entre PC1 y PC Remoto en Vercel
-            try {
-                await fetch(REST_API_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: "gastos_carlos_2026",
-                        data: payload
-                    })
-                });
-                updateCloudBadge('success', 'Nube Activa - Sincronizado');
-            } catch(e) {
-                updateCloudBadge('success', 'Nube Activa - Sincronizado');
-            }
-        }
-
-        window.pushToCloud = function() {
-            clearTimeout(pushDebounceTimer);
-            pushDebounceTimer = setTimeout(() => {
-                saveToCloud();
-            }, 300);
-        };
-
-        window.triggerManualSync = function() {
-            const icon = document.getElementById('sync-icon');
-            if (icon) icon.classList.add('fa-spin');
-            
-            fetchFromPublicCloud().then(() => {
-                saveToCloud().then(() => {
-                    setTimeout(() => {
-                        if (icon) icon.classList.remove('fa-spin');
-                    }, 500);
-                });
-            });
-        };
-
-        /* Obtiene la fecha local de hoy en YYYY-MM-DD */
+    <script>
+        /* Función para obtener la fecha de hoy en formato YYYY-MM-DD local */
         function getLocalDateString() {
             const now = new Date();
             const year = now.getFullYear();
@@ -477,66 +244,728 @@
             return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
 
-        function initApp() {
+        /* Suma exactamente 1 mes a una fecha YYYY-MM-DD */
+        function addOneMonth(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            let y = parseInt(parts[0], 10);
+            let m = parseInt(parts[1], 10) - 1;
+            let d = parseInt(parts[2], 10);
+
+            let dt = new Date(y, m, d);
+            dt.setMonth(dt.getMonth() + 1);
+
+            const resY = dt.getFullYear();
+            const resM = String(dt.getMonth() + 1).padStart(2, '0');
+            const resD = String(dt.getDate()).padStart(2, '0');
+            return `${resY}-${resM}-${resD}`;
+        }
+
+        /* Formateador de Soles Peruanos PEN */
+        function formatPEN(val) {
+            if (isNaN(val) || val === null) return "S/ 0.00";
+            const isNegative = val < 0;
+            const absVal = Math.abs(val).toFixed(2);
+            return `${isNegative ? '-' : ''}S/ ${absVal}`;
+        }
+
+        const DEFAULT_MODULES = [
+            {
+                id: 'mod_control_gastos',
+                name: 'Control de Gastos',
+                subtitle: 'Control operativo de flujos y balances diarios',
+                icon: 'fa-wallet',
+                categories: [
+                    {
+                        id: 'cat_movilidad',
+                        name: 'MOVILIDAD',
+                        color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+                        headerColor: 'bg-emerald-500 text-slate-950',
+                        daysType: 'working',
+                        start: '2026-06-22',
+                        actual: getLocalDateString(),
+                        end: '2026-07-22',
+                        income: 77.00,
+                        saldoTarjeta: 42.00
+                    },
+                    {
+                        id: 'cat_desayuno',
+                        name: 'DESAY MENU L-V',
+                        color: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+                        headerColor: 'bg-amber-400 text-slate-950',
+                        daysType: 'working',
+                        start: '2026-06-22',
+                        actual: getLocalDateString(),
+                        end: '2026-07-22',
+                        income: 319.00,
+                        saldoTarjeta: 174.00
+                    },
+                    {
+                        id: 'cat_saba',
+                        name: 'MENU SABA',
+                        color: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
+                        headerColor: 'bg-orange-500 text-slate-950',
+                        daysType: 'saturday',
+                        start: '2026-06-22',
+                        actual: getLocalDateString(),
+                        end: '2026-07-22',
+                        income: 48.00,
+                        saldoTarjeta: 0.00
+                    }
+                ]
+            },
+            {
+                id: 'mod_tarjetas_credito',
+                name: 'Tarjetas de Crédito',
+                subtitle: 'Líneas de crédito, consumos diarios y estado de cuenta',
+                icon: 'fa-credit-card',
+                categories: [
+                    {
+                        id: 'tc_interbank',
+                        name: 'BANCO INTERBANK',
+                        bankCode: 'INTERBANK',
+                        cardTitle: 'Mi Tarjeta Interbank',
+                        cardType: 'VISA SIGNATURE',
+                        cardLastDigits: '2026',
+                        themeGradient: 'from-slate-900 via-emerald-950 to-slate-950',
+                        accentColor: 'text-emerald-400',
+                        barGradient: 'from-emerald-400 to-teal-300',
+                        color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+                        headerColor: 'bg-emerald-600 text-white',
+                        daysType: 'all',
+                        start: '2026-07-01',
+                        actual: getLocalDateString(),
+                        end: '2026-08-17',
+                        lineaCredito: 12480.00,
+                        disponible: 11636.55,
+                        restarSobre: 50.00,
+                        income: 12480.00,
+                        saldoTarjeta: 0.00, // Abonado/Pago realizado
+                        movements: [
+                            { id: 'mov_ibk_1', name: 'El fogon ch', amount: 81.00, date: 'Mié 22 Jul | 11:20 pm', status: 'En proceso' },
+                            { id: 'mov_ibk_2', name: 'Tottus', amount: 27.75, date: 'Mié 22 Jul | 6:53 pm', status: 'En proceso' }
+                        ]
+                    },
+                    {
+                        id: 'tc_bbva',
+                        name: 'BANCO BBVA',
+                        bankCode: 'BBVA',
+                        cardTitle: 'Mi Tarjeta BBVA',
+                        cardType: 'VISA PLATINUM BBVA',
+                        cardLastDigits: '8842',
+                        themeGradient: 'from-blue-950 via-slate-900 to-indigo-950',
+                        accentColor: 'text-sky-400',
+                        barGradient: 'from-sky-400 to-blue-500',
+                        color: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+                        headerColor: 'bg-sky-600 text-white',
+                        daysType: 'all',
+                        start: '2026-07-01',
+                        actual: getLocalDateString(),
+                        end: '2026-08-20',
+                        lineaCredito: 8500.00,
+                        disponible: 7900.00,
+                        restarSobre: 0.00,
+                        income: 8500.00,
+                        saldoTarjeta: 0.00, // Abonado/Pago realizado
+                        movements: [
+                            { id: 'mov_bbva_1', name: 'Supermercados Peruanos', amount: 150.00, date: 'Jue 23 Jul | 02:15 pm', status: 'Procesado' }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        /* Estado Global */
+        const STORAGE_KEY = 'control_gastos_v15_state';
+        window.state = {
+            activeModuleId: 'mod_control_gastos',
+            activeCardFilter: 'all', // 'all', 'tc_interbank', 'tc_bbva'
+            modules: JSON.parse(JSON.stringify(DEFAULT_MODULES))
+        };
+
+        function loadState() {
             try {
-                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-                let parsed = null;
-                if (storedData) {
-                    parsed = JSON.parse(storedData);
-                }
-
-                window.state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-
-                if (parsed) {
-                    const catArray = parsed.categories || parsed;
-                    if (Array.isArray(catArray)) {
-                        window.state.lastUpdated = parsed.updatedAt || 0;
-                        catArray.forEach(savedCat => {
-                            const target = window.state.categories.find(c => c.id === savedCat.id);
-                            if (target) {
-                                if (savedCat.start) target.start = savedCat.start;
-                                if (savedCat.end) target.end = savedCat.end;
-                                if (savedCat.income !== undefined) target.income = parseFloat(savedCat.income) || 0;
-                                if (savedCat.saldoTarjeta !== undefined) target.saldoTarjeta = parseFloat(savedCat.saldoTarjeta) || 0;
-                            }
-                        });
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && Array.isArray(parsed.modules)) {
+                        window.state.modules = parsed.modules;
+                        if (parsed.activeModuleId) window.state.activeModuleId = parsed.activeModuleId;
+                        if (parsed.activeCardFilter) window.state.activeCardFilter = parsed.activeCardFilter;
                     }
                 }
             } catch (e) {
-                window.state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+                console.warn("Cargando defaults", e);
             }
 
-            // Sincronizar fecha actual automáticamente a hoy
-            const todayStr = getLocalDateString();
-            window.state.categories.forEach(cat => {
-                cat.actual = todayStr;
+            // Sincronizar fecha actual de hoy en todas las categorías
+            const today = getLocalDateString();
+            window.state.modules.forEach(m => {
+                m.categories.forEach(c => {
+                    c.actual = today;
+                });
             });
 
-            // Actualizar la placa superior
             const badge = document.getElementById('current-date-badge');
-            if (badge) {
-                badge.innerText = formatDateToDisplay(todayStr);
-            }
-
-            setupCloudSync();
+            if (badge) badge.innerText = formatDateToDisplay(today);
         }
 
-        /* Cambia el texto del indicador visual de la nube */
-        function updateCloudBadge(type, text) {
-            const badge = document.getElementById('cloud-status-badge');
-            if (!badge) return;
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(window.state));
+            } catch (e) {
+                console.error("Error guardando estado", e);
+            }
+        }
 
-            if (type === 'success') {
-                badge.className = 'flex items-center gap-1.5 font-semibold text-emerald-400';
-                badge.innerHTML = `<span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span> ${text}`;
-            } else if (type === 'saving') {
-                badge.className = 'flex items-center gap-1.5 font-semibold text-amber-400';
-                badge.innerHTML = `<span class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-ping"></span> ${text}`;
+        function toggleSidebar(show) {
+            const sidebar = document.getElementById('sidebar-menu');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (!sidebar || !overlay) return;
+
+            if (show) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
             } else {
-                badge.className = 'flex items-center gap-1.5 font-semibold text-slate-400';
-                badge.innerHTML = `<span class="h-2.5 w-2.5 rounded-full bg-slate-500"></span> ${text}`;
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
             }
         }
+
+        function renderSidebarNav() {
+            const container = document.getElementById('modules-list-container');
+            if (!container) return;
+
+            container.innerHTML = window.state.modules.map(mod => {
+                const isActive = mod.id === window.state.activeModuleId;
+                const isTarjetasModule = mod.id === 'mod_tarjetas_credito';
+
+                let html = `
+                    <div class="space-y-1">
+                        <button onclick="switchModule('${mod.id}')" 
+                            class="w-full text-left p-3 rounded-xl border transition-all duration-200 flex items-center justify-between group ${
+                                isActive 
+                                ? 'bg-emerald-500/15 border-emerald-500/40 text-white shadow-lg shadow-emerald-500/10' 
+                                : 'bg-slate-900/60 hover:bg-slate-800/80 border-slate-800 text-slate-300'
+                            }">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid ${mod.icon || 'fa-folder'} text-base ${isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-emerald-400'}"></i>
+                                <div>
+                                    <p class="text-xs font-bold leading-tight">${mod.name}</p>
+                                    <p class="text-[10px] text-slate-400 truncate max-w-[160px]">${mod.subtitle || ''}</p>
+                                </div>
+                            </div>
+                            ${isActive ? '<span class="h-2 w-2 rounded-full bg-emerald-400"></span>' : ''}
+                        </button>
+                `;
+
+                // Renderizar Sub-Menú para el módulo de Tarjetas de Crédito
+                if (isTarjetasModule) {
+                    const filter = window.state.activeCardFilter || 'all';
+                    html += `
+                        <div class="ml-4 pl-3 border-l-2 border-slate-800 space-y-1 my-1">
+                            <button onclick="switchCardFilter('all')" class="w-full text-left py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-between transition ${isActive && filter === 'all' ? 'bg-slate-800 text-emerald-400 font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-900'}">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-layer-group text-[10px]"></i> Ver Todas
+                                </span>
+                                ${isActive && filter === 'all' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                            </button>
+
+                            <button onclick="switchCardFilter('tc_interbank')" class="w-full text-left py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-between transition ${isActive && filter === 'tc_interbank' ? 'bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-900'}">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-credit-card text-emerald-400 text-[10px]"></i> Banco Interbank
+                                </span>
+                                ${isActive && filter === 'tc_interbank' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                            </button>
+
+                            <button onclick="switchCardFilter('tc_bbva')" class="w-full text-left py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-between transition ${isActive && filter === 'tc_bbva' ? 'bg-sky-500/20 text-sky-400 font-bold border border-sky-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-900'}">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-credit-card text-sky-400 text-[10px]"></i> Banco BBVA
+                                </span>
+                                ${isActive && filter === 'tc_bbva' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                            </button>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+                return html;
+            }).join('');
+        }
+
+        function switchModule(modId) {
+            window.state.activeModuleId = modId;
+            if (modId !== 'mod_tarjetas_credito') {
+                window.state.activeCardFilter = 'all';
+            }
+            saveState();
+            renderSidebarNav();
+            updateHeaderInfo();
+            buildStaticTable();
+            recalculateAll();
+            toggleSidebar(false);
+        }
+
+        function switchCardFilter(filterId) {
+            window.state.activeModuleId = 'mod_tarjetas_credito';
+            window.state.activeCardFilter = filterId;
+            saveState();
+            renderSidebarNav();
+            updateHeaderInfo();
+            recalculateAll();
+            renderCardAppWidget();
+            toggleSidebar(false);
+        }
+
+        function createNewFolderPrompt() {
+            const name = prompt("Nombre de la nueva carpeta / módulo:");
+            if (!name || !name.trim()) return;
+
+            const newId = 'mod_' + Date.now();
+            window.state.modules.push({
+                id: newId,
+                name: name.trim(),
+                subtitle: 'Carpeta de control personalizada',
+                icon: 'fa-folder-open',
+                categories: [
+                    {
+                        id: 'cat_' + Date.now(),
+                        name: 'CUENTA 1',
+                        color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+                        headerColor: 'bg-emerald-500 text-slate-950',
+                        daysType: 'working',
+                        start: '2026-07-01',
+                        actual: getLocalDateString(),
+                        end: '2026-08-01',
+                        income: 100.00,
+                        saldoTarjeta: 100.00
+                    }
+                ]
+            });
+
+            switchModule(newId);
+        }
+
+        function updateHeaderInfo() {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod) return;
+
+            const titleEl = document.getElementById('header-module-title');
+            const subEl = document.getElementById('header-module-subtitle');
+            const iconEl = document.getElementById('header-icon');
+            const tableTitle = document.getElementById('table-title');
+            const mainTableContainer = document.querySelector('main');
+            const cardWidget = document.getElementById('card-app-widget-container');
+            const advisorSection = document.getElementById('advisor-section');
+
+            let displayTitle = activeMod.name;
+            let displaySub = activeMod.subtitle;
+
+            if (activeMod.id === 'mod_tarjetas_credito') {
+                const filter = window.state.activeCardFilter || 'all';
+                if (filter === 'tc_interbank') {
+                    displayTitle = 'Tarjetas de Crédito - Interbank';
+                    displaySub = 'Vista exclusiva: Banco Interbank (Visa Signature)';
+                } else if (filter === 'tc_bbva') {
+                    displayTitle = 'Tarjetas de Crédito - BBVA';
+                    displaySub = 'Vista exclusiva: Banco BBVA (Visa Platinum)';
+                }
+            }
+
+            if (titleEl) titleEl.innerText = displayTitle;
+            if (subEl) subEl.innerText = displaySub;
+            if (iconEl) iconEl.className = `fa-solid ${activeMod.icon || 'fa-folder'} text-xl text-slate-950`;
+            if (tableTitle) tableTitle.innerHTML = `<i class="fa-solid ${activeMod.icon || 'fa-table'} text-emerald-400"></i> Cuadro de ${displayTitle}`;
+            
+            if (activeMod.id === 'mod_tarjetas_credito') {
+                if (cardWidget) {
+                    cardWidget.classList.remove('hidden');
+                    renderCardAppWidget();
+                }
+                if (mainTableContainer) mainTableContainer.classList.add('hidden');
+                if (advisorSection) advisorSection.classList.add('hidden');
+            } else {
+                if (cardWidget) {
+                    cardWidget.classList.add('hidden');
+                    cardWidget.innerHTML = '';
+                }
+                if (mainTableContainer) mainTableContainer.classList.remove('hidden');
+                if (advisorSection) advisorSection.classList.remove('hidden');
+            }
+        }
+
+        function renderCardAppWidget() {
+            const container = document.getElementById('card-app-widget-container');
+            if (!container) return;
+
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod || activeMod.id !== 'mod_tarjetas_credito') {
+                container.classList.add('hidden');
+                return;
+            }
+
+            const allCards = activeMod.categories || [];
+            if (allCards.length === 0) return;
+
+            const filter = window.state.activeCardFilter || 'all';
+
+            // Filtrar las tarjetas según la selección del sub-menú
+            const visibleCards = allCards.filter(c => {
+                if (filter === 'all') return true;
+                return c.id === filter;
+            });
+
+            // Totales acumulados para el Asesor de Tarjetas
+            let totalLinea = 0;
+            let totalDisponible = 0;
+            let totalConsumido = 0;
+            let totalAbonado = 0;
+            let totalFaltantePagar = 0;
+
+            visibleCards.forEach(c => {
+                const l = c.lineaCredito || 0;
+                const d = c.disponible !== undefined ? c.disponible : 0;
+                const cons = Math.max(0, l - d);
+                const abono = c.saldoTarjeta || 0;
+                const faltante = Math.max(0, cons - abono);
+
+                totalLinea += l;
+                totalDisponible += d;
+                totalConsumido += cons;
+                totalAbonado += abono;
+                totalFaltantePagar += faltante;
+            });
+
+            let subTitleBanner = 'Resumen Inteligente de Tarjetas de Crédito';
+            if (filter === 'tc_interbank') subTitleBanner = 'Resumen Inteligente - Banco Interbank';
+            if (filter === 'tc_bbva') subTitleBanner = 'Resumen Inteligente - Banco BBVA';
+
+            let html = `
+                <!-- 1. Banner de Asesor Financiero e Indicadores Generales de Tarjetas -->
+                <div class="glass-panel p-4 sm:p-6 rounded-2xl relative overflow-hidden shadow-xl mb-6">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                    <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl"></div>
+                    
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="flex h-2 w-2 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-emerald-400">${subTitleBanner}</h2>
+                        </div>
+                        <div class="flex items-start gap-3 sm:gap-4">
+                            <div class="text-2xl sm:text-3xl">🤖</div>
+                            <div>
+                                <h3 class="text-base sm:text-lg font-bold text-white mb-1">
+                                    ${totalFaltantePagar > 0 ? '⚠️ Advertencia: Deuda Pendiente de Pago' : '🟢 Excelente: Sin Faltante de Pago'}
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    ${totalFaltantePagar > 0 
+                                        ? `Tienes un faltante total por consumo de <strong class="text-rose-400 font-extrabold text-glow-red">${formatPEN(totalFaltantePagar)}</strong> por saldar para cubrir el periodo actual sin pagar intereses.`
+                                        : `¡Fabuloso! Todos tus consumos han sido totalmente cubiertos con los abonos realizados.`}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumen de Métricas de Tarjetas -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-4 sm:pt-6 mt-4 sm:mt-6 border-t border-slate-800/60 text-center">
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Línea de Crédito Total</p>
+                            <p class="text-sm sm:text-base font-extrabold text-amber-300">${formatPEN(totalLinea)}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Consumido Total</p>
+                            <p class="text-sm sm:text-base font-extrabold text-rose-400">${formatPEN(totalConsumido)}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Disponible Total</p>
+                            <p class="text-sm sm:text-base font-extrabold text-emerald-400">${formatPEN(totalDisponible)}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Faltante a Pagar</p>
+                            <p class="text-sm sm:text-base font-black ${totalFaltantePagar > 0 ? 'text-glow-red animate-pulse' : 'text-glow-green'}">${formatPEN(totalFaltantePagar)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 2. Tarjetas y Formuladores de Gasto Diario (Mantenemos el índice real catIdx)
+            allCards.forEach((card, catIdx) => {
+                if (filter !== 'all' && card.id !== filter) return;
+
+                const linea = card.lineaCredito || 10000;
+                const disp = card.disponible !== undefined ? card.disponible : 8000;
+                const consumido = Math.max(0, linea - disp);
+                const abonado = card.saldoTarjeta || 0;
+                const faltantePagar = Math.max(0, consumido - abonado);
+
+                const usagePercent = Math.min(100, Math.max(0, (consumido / linea) * 100)).toFixed(1);
+                
+                const dueDateFormatted = formatDateToDisplay(card.end).substring(0, 5);
+                const movements = card.movements || [];
+
+                const isBBVA = card.bankCode === 'BBVA' || card.name.includes('BBVA');
+                const badgeBg = isBBVA ? 'bg-sky-500/20 text-sky-400 border-sky-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+                const accentText = isBBVA ? 'text-sky-400' : 'text-emerald-400';
+                const btnBg = isBBVA ? 'bg-sky-500 hover:bg-sky-400 text-slate-950' : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950';
+                const barColor = isBBVA ? 'from-sky-400 to-blue-500' : 'from-emerald-400 to-teal-300';
+                const cardGradient = isBBVA ? 'from-slate-950 via-blue-950 to-slate-900' : 'from-slate-900 via-emerald-950 to-slate-950';
+
+                html += `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                        <!-- Tarjeta Visual estilo App -->
+                        <div class="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-credit-card ${accentText} text-lg"></i>
+                                        <h3 class="text-white font-extrabold text-base tracking-wide">${card.cardTitle || card.name}</h3>
+                                    </div>
+                                    <span class="px-2.5 py-0.5 rounded-full ${badgeBg} text-[10px] font-black border uppercase tracking-wider">
+                                        ${card.cardType || 'VISA'}
+                                    </span>
+                                </div>
+
+                                <!-- Bloque 1: Campo Editable de Línea de Crédito -->
+                                <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
+                                        <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Línea de Crédito</span>
+                                    </div>
+                                    <div class="relative inline-flex items-center w-36 rounded-lg bg-slate-950 border border-amber-500/50 focus-within:border-amber-400 focus-within:ring-1 focus-within:ring-amber-400">
+                                        <span class="pl-2.5 text-xs text-amber-400 font-bold select-none">S/</span>
+                                        <input type="number" step="0.01" value="${linea.toFixed(2)}" 
+                                            onchange="updateCardLinea(${catIdx}, this.value)" 
+                                            onblur="this.value = parseFloat(this.value || 0).toFixed(2)"
+                                            class="bg-transparent border-none text-right px-2.5 py-1 text-xs text-amber-300 font-black w-full focus:outline-none">
+                                    </div>
+                                </div>
+
+                                <!-- Bloque 2: Campo Editable de Abonado / Pago Realizado -->
+                                <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-hand-holding-dollar text-emerald-400 text-xs"></i>
+                                        <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Abono / Pago Realizado</span>
+                                    </div>
+                                    <div class="relative inline-flex items-center w-36 rounded-lg bg-slate-950 border border-emerald-500/50 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400">
+                                        <span class="pl-2.5 text-xs text-emerald-400 font-bold select-none">S/</span>
+                                        <input type="number" step="0.01" value="${abonado.toFixed(2)}" 
+                                            onchange="updateCardAbono(${catIdx}, this.value)" 
+                                            onblur="this.value = parseFloat(this.value || 0).toFixed(2)"
+                                            class="bg-transparent border-none text-right px-2.5 py-1 text-xs text-emerald-300 font-black w-full focus:outline-none">
+                                    </div>
+                                </div>
+
+                                <!-- Bloque 3: Indicador Destacado AUTOMÁTICO de FALTANTE POR CONSUMO -->
+                                <div class="flex items-center justify-between bg-rose-950/20 p-2.5 rounded-xl border border-rose-500/50 mb-3 glow-red-border">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-circle-exclamation text-rose-400 text-xs animate-pulse"></i>
+                                        <span class="text-xs font-black text-rose-300 uppercase tracking-wide">Faltante por Consumo (A Pagar)</span>
+                                    </div>
+                                    <span class="text-sm font-black ${faltantePagar > 0 ? 'text-glow-red animate-pulse' : 'text-glow-green'}">
+                                        ${formatPEN(faltantePagar)}
+                                    </span>
+                                </div>
+
+                                <!-- Tarjeta Física Estilo App -->
+                                <div class="bg-gradient-to-br ${cardGradient} p-4 rounded-xl border border-slate-800/80 mb-4 shadow-inner">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <div>
+                                            <p class="text-xs font-black text-white tracking-widest uppercase">${card.cardType || card.name}</p>
+                                            <p class="text-[10px] text-slate-400 font-mono">•••• ${card.cardLastDigits || '2026'}</p>
+                                        </div>
+                                        <i class="fa-brands fa-cc-visa text-2xl text-slate-300"></i>
+                                    </div>
+
+                                    <!-- Barra de Progreso de Consumo -->
+                                    <div class="w-full bg-slate-900 rounded-full h-2 mb-3 overflow-hidden border border-slate-800">
+                                        <div class="bg-gradient-to-r ${barColor} h-2 rounded-full transition-all duration-500" style="width: ${usagePercent}%"></div>
+                                    </div>
+
+                                    <div class="flex justify-between items-end">
+                                        <div>
+                                            <p class="text-[10px] text-slate-400 font-medium uppercase">Consumido</p>
+                                            <p class="text-base sm:text-lg font-black text-rose-400">${formatPEN(consumido)}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-[10px] text-slate-400 font-medium uppercase">Disponible</p>
+                                            <p class="text-base sm:text-lg font-black ${accentText}">${formatPEN(disp)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pago del Mes y Vencimiento -->
+                                <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-slate-800/80 rounded-lg ${accentText} border border-slate-700">
+                                            <i class="fa-solid fa-calendar-check text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-bold text-white">Consumo del Mes: <span class="text-rose-400 font-black">${formatPEN(consumido)}</span></p>
+                                            <p class="text-[10px] text-slate-400">Vence el ${dueDateFormatted}</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-3 py-1 ${badgeBg} font-black text-xs rounded-lg shadow-md">
+                                        VIGENTE
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel de Movimientos y Registrador de Gasto Diario -->
+                        <div class="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+                                    <h4 class="text-xs font-extrabold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                                        <i class="fa-solid fa-receipt ${accentText}"></i> Registrar Gasto Diario (${card.name})
+                                    </h4>
+                                    <span class="text-[10px] text-slate-400 font-medium">Descuenta Disponible</span>
+                                </div>
+
+                                <!-- Formulario de Nuevo Movimiento Diario -->
+                                <div class="grid grid-cols-12 gap-2 mb-4">
+                                    <div class="col-span-6">
+                                        <input type="text" id="new-mov-name-${catIdx}" placeholder="Ej: Tottus, Gasolina" 
+                                            class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+                                    </div>
+                                    <div class="col-span-4">
+                                        <input type="number" id="new-mov-amount-${catIdx}" step="0.01" placeholder="Monto S/" 
+                                            class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white text-right font-bold focus:outline-none focus:border-emerald-500 transition">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <button onclick="addCardMovement(${catIdx})" 
+                                            class="w-full h-full ${btnBg} font-black rounded-lg text-xs flex items-center justify-center transition active:scale-95 shadow-md" title="Guardar Gasto">
+                                            <i class="fa-solid fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Lista de Movimientos -->
+                                <h5 class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Movimientos Recientes</h5>
+                                <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                                    ${movements.length === 0 ? '<p class="text-xs text-slate-500 italic text-center py-4">No hay consumos registrados en esta tarjeta.</p>' : ''}
+                                    ${movements.map((m) => `
+                                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 transition">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 text-xs">
+                                                    <i class="fa-solid fa-bag-shopping"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs font-bold text-white leading-tight">${m.name}</p>
+                                                    <p class="text-[10px] text-slate-400">${m.date} • <span class="text-amber-400">${m.status || 'En proceso'}</span></p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-black text-rose-400">-${formatPEN(m.amount)}</span>
+                                                <button onclick="deleteCardMovement(${catIdx}, '${m.id}')" class="text-slate-500 hover:text-rose-400 text-xs p-1 transition" title="Eliminar consumo">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        window.updateCardLinea = function(catIdx, valString) {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod || !activeMod.categories[catIdx]) return;
+
+            const val = parseFloat(valString) || 0;
+            const cat = activeMod.categories[catIdx];
+            cat.lineaCredito = val;
+            cat.income = val;
+
+            saveState();
+            buildStaticTable();
+            recalculateAll();
+            renderCardAppWidget();
+        };
+
+        window.updateCardAbono = function(catIdx, valString) {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod || !activeMod.categories[catIdx]) return;
+
+            const val = parseFloat(valString) || 0;
+            const cat = activeMod.categories[catIdx];
+            cat.saldoTarjeta = val;
+
+            saveState();
+            buildStaticTable();
+            recalculateAll();
+            renderCardAppWidget();
+        };
+
+        window.addCardMovement = function(catIdx) {
+            const nameEl = document.getElementById(`new-mov-name-${catIdx}`);
+            const amountEl = document.getElementById(`new-mov-amount-${catIdx}`);
+            if (!nameEl || !amountEl) return;
+
+            const name = nameEl.value.trim() || 'Gasto Diario';
+            const amount = parseFloat(amountEl.value) || 0;
+
+            if (amount <= 0) return;
+
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod || !activeMod.categories[catIdx]) return;
+
+            const cat = activeMod.categories[catIdx];
+            if (!cat.movements) cat.movements = [];
+
+            const now = new Date();
+            const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+            const timeStr = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            cat.movements.unshift({
+                id: 'mov_' + Date.now(),
+                name: name,
+                amount: amount,
+                date: timeStr,
+                status: 'En proceso'
+            });
+
+            // Reducir disponible y actualizar consumo
+            const currentDisp = cat.disponible !== undefined ? cat.disponible : 10000;
+            cat.disponible = Math.max(0, currentDisp - amount);
+
+            nameEl.value = '';
+            amountEl.value = '';
+
+            saveState();
+            buildStaticTable();
+            recalculateAll();
+            renderCardAppWidget();
+        };
+
+        window.deleteCardMovement = function(catIdx, movId) {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod || !activeMod.categories[catIdx]) return;
+
+            const cat = activeMod.categories[catIdx];
+            if (!cat.movements) return;
+
+            const movIdx = cat.movements.findIndex(m => m.id === movId);
+            if (movIdx !== -1) {
+                const deletedMov = cat.movements[movIdx];
+                cat.disponible = (cat.disponible || 0) + (deletedMov.amount || 0);
+                cat.movements.splice(movIdx, 1);
+
+                saveState();
+                buildStaticTable();
+                recalculateAll();
+                renderCardAppWidget();
+            }
+        };
 
         function calculateDaysByMode(startDateStr, endDateStr, mode, isRemaining = false) {
             if (!startDateStr || !endDateStr || typeof startDateStr !== 'string' || typeof endDateStr !== 'string') return 0;
@@ -589,26 +1018,26 @@
             return diffDays > 0 ? diffDays : 0;
         }
 
-        function formatPEN(val) {
-            if (isNaN(val) || val === null) return "S/ 0.00";
-            const isNegative = val < 0;
-            const absVal = Math.abs(val).toFixed(2);
-            return `${isNegative ? '-' : ''}S/ ${absVal}`;
-        }
-
         function buildStaticTable() {
             const headerRow = document.getElementById('table-header-row');
             const tbody = document.getElementById('spreadsheet-body');
             
             if (!headerRow || !tbody) return;
 
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod) return;
+
+            const categories = activeMod.categories || [];
+            const isTarjetas = activeMod.id === 'mod_tarjetas_credito';
+
+            // 1. Cabeceras
             let headerHTML = `
                 <th class="p-4 font-bold text-[11px] uppercase tracking-wider text-slate-400 w-1/5 min-w-[200px]">
                     INDICADOR / CUENTA
                 </th>
             `;
             
-            window.state.categories.forEach((cat) => {
+            categories.forEach((cat) => {
                 headerHTML += `
                     <th class="p-4 text-center font-bold relative group w-52 min-w-[180px]">
                         <div class="px-3 py-1.5 rounded-lg inline-flex items-center gap-2 ${cat.headerColor || 'bg-slate-800 text-white'} text-[11px] font-black shadow-md uppercase tracking-wider">
@@ -625,17 +1054,35 @@
             `;
             headerRow.innerHTML = headerHTML;
 
-            const rowsConfig = [
-                { id: 'cuantos_dias', label: 'CUANTOS DIAS', icon: 'fa-hourglass-half', isCalculated: true, labelClass: 'text-slate-400 font-semibold', hideTotal: true },
-                { id: 'fecha_inicio', label: 'FECHA DE INICIO', icon: 'fa-calendar-plus', isDate: true, key: 'start', hideTotal: true },
-                { id: 'fecha_actual', label: 'FECHA ACTUAL', icon: 'fa-calendar-day', isDate: true, key: 'actual', hideTotal: true },
-                { id: 'fecha_termino', label: 'FECHA DE TERMINO', icon: 'fa-calendar-check', isDate: true, key: 'end', labelClass: 'text-rose-400 font-bold', hideTotal: true },
-                { id: 'ingreso_gasto', label: 'INGRESO GASTO', icon: 'fa-money-bill-wave', isNumber: true, key: 'income', rowClass: 'bg-slate-900/30', labelClass: 'text-red-500 font-black' },
-                { id: 'gasto_por_dia', label: 'GASTO POR DIA', icon: 'fa-calculator', isCalculated: true, format: true },
-                { id: 'resultado_saldo', label: 'RESULTADO SALDO', icon: 'fa-chart-pie', isCalculated: true, format: true, rowClass: 'bg-amber-500/10 border-amber-500/20', labelClass: 'text-amber-400 font-bold' },
-                { id: 'saldo_tarjeta', label: 'SALDO TARJETA', icon: 'fa-credit-card', isNumber: true, key: 'saldoTarjeta', rowClass: 'glow-red-border border-2 bg-rose-950/20 my-2 rounded-xl transition-all duration-300', labelClass: 'text-rose-400 font-black tracking-wide' },
-                { id: 'faltante', label: 'FALTANTE', icon: 'fa-circle-exclamation', isCalculated: true, format: true, labelClass: 'text-slate-300 font-black' }
-            ];
+            // 2. Definición de Filas según Módulo
+            let rowsConfig = [];
+
+            if (isTarjetas) {
+                rowsConfig = [
+                    { id: 'linea_credito', label: 'LINEA DE CREDITO', icon: 'fa-credit-card', isNumber: true, key: 'lineaCredito', rowClass: 'bg-amber-500/10 border-amber-500/20', labelClass: 'text-amber-300 font-black' },
+                    { id: 'disponible', label: 'DISPONIBLE', icon: 'fa-wallet', isNumber: true, key: 'disponible', labelClass: 'text-emerald-400 font-bold' },
+                    { id: 'consumido', label: 'CONSUMIDO', icon: 'fa-cart-shopping', isCalculated: true, format: true, labelClass: 'text-rose-400 font-black' },
+                    { id: 'restar_sobre', label: 'RESTAR SOBRE', icon: 'fa-minus-circle', isNumber: true, key: 'restarSobre', labelClass: 'text-slate-400 font-semibold' },
+                    { id: 'cuantos_dias', label: 'CUANTOS DIAS VENC', icon: 'fa-hourglass-half', isCalculated: true, labelClass: 'text-slate-400 font-semibold', hideTotal: true },
+                    { id: 'fecha_inicio', label: 'FECHA DE INICIO', icon: 'fa-calendar-plus', isDate: true, key: 'start', hideTotal: true },
+                    { id: 'fecha_actual', label: 'FECHA ACTUAL', icon: 'fa-calendar-day', isDate: true, key: 'actual', hideTotal: true },
+                    { id: 'fecha_termino', label: 'FECHA VENCIMIENTO', icon: 'fa-calendar-check', isDate: true, key: 'end', labelClass: 'text-rose-400 font-bold', hideTotal: true },
+                    { id: 'saldo_tarjeta', label: 'ABONADO / PAGO', icon: 'fa-money-bill-wave', isNumber: true, key: 'saldoTarjeta', rowClass: 'glow-red-border border-2 bg-rose-950/20 my-2 rounded-xl transition-all duration-300', labelClass: 'text-rose-400 font-black tracking-wide' },
+                    { id: 'faltante', label: 'BRECHA DE PAGO', icon: 'fa-circle-exclamation', isCalculated: true, format: true, labelClass: 'text-slate-300 font-black' }
+                ];
+            } else {
+                rowsConfig = [
+                    { id: 'cuantos_dias', label: 'CUANTOS DIAS', icon: 'fa-hourglass-half', isCalculated: true, labelClass: 'text-slate-400 font-semibold', hideTotal: true },
+                    { id: 'fecha_inicio', label: 'FECHA DE INICIO', icon: 'fa-calendar-plus', isDate: true, key: 'start', hideTotal: true },
+                    { id: 'fecha_actual', label: 'FECHA ACTUAL', icon: 'fa-calendar-day', isDate: true, key: 'actual', hideTotal: true },
+                    { id: 'fecha_termino', label: 'FECHA DE TERMINO', icon: 'fa-calendar-check', isDate: true, key: 'end', labelClass: 'text-rose-400 font-bold', hideTotal: true },
+                    { id: 'ingreso_gasto', label: 'INGRESO GASTO', icon: 'fa-money-bill-wave', isNumber: true, key: 'income', rowClass: 'bg-slate-900/30', labelClass: 'text-red-500 font-black' },
+                    { id: 'gasto_por_dia', label: 'GASTO POR DIA', icon: 'fa-calculator', isCalculated: true, format: true },
+                    { id: 'resultado_saldo', label: 'RESULTADO SALDO', icon: 'fa-chart-pie', isCalculated: true, format: true, rowClass: 'bg-amber-500/10 border-amber-500/20', labelClass: 'text-amber-400 font-bold' },
+                    { id: 'saldo_tarjeta', label: 'SALDO TARJETA', icon: 'fa-credit-card', isNumber: true, key: 'saldoTarjeta', rowClass: 'glow-red-border border-2 bg-rose-950/20 my-2 rounded-xl transition-all duration-300', labelClass: 'text-rose-400 font-black tracking-wide' },
+                    { id: 'faltante', label: 'FALTANTE', icon: 'fa-circle-exclamation', isCalculated: true, format: true, labelClass: 'text-slate-300 font-black' }
+                ];
+            }
 
             tbody.innerHTML = '';
 
@@ -649,14 +1096,14 @@
                     </td>
                 `;
 
-                window.state.categories.forEach((cat, cIdx) => {
+                categories.forEach((cat, cIdx) => {
                     if (rowSpec.isDate) {
                         rowHTML += `
                             <td class="p-3 text-center">
                                 <div class="relative inline-block w-full max-w-[170px]">
-                                    <input type="date" value="${cat[rowSpec.key]}" 
+                                    <input type="date" value="${cat[rowSpec.key] || ''}" 
                                         id="input-${rowSpec.id}-${cIdx}"
-                                        onchange="updateValue(${cIdx}, '${rowSpec.key}', this.value)" 
+                                        onchange="handleDateChange(${cIdx}, '${rowSpec.key}', this.value)" 
                                         class="bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-lg px-2.5 py-1.5 text-center text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-full transition cursor-pointer">
                                 </div>
                             </td>
@@ -671,7 +1118,7 @@
                                     <input type="number" step="0.01" value="${numericVal}" 
                                         id="input-${rowSpec.id}-${cIdx}"
                                         oninput="updateNumericValue(${cIdx}, '${rowSpec.key}', this.value)" 
-                                        onblur="formatNumericInput(this, ${cIdx}, '${rowSpec.key}')"
+                                        onblur="formatNumericInput(this)"
                                         class="bg-transparent border-none text-right px-2.5 py-1.5 text-xs text-white font-black w-full focus:outline-none">
                                 </div>
                             </td>
@@ -694,147 +1141,243 @@
         }
 
         function recalculateAll() {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod) return;
+
+            const categories = activeMod.categories || [];
+            const isTarjetas = activeMod.id === 'mod_tarjetas_credito';
+
             let totals = {
                 income: 0,
                 gasto_por_dia: 0,
                 resultado_saldo: 0,
                 saldoTarjeta: 0,
-                faltante: 0
+                faltante: 0,
+                lineaCredito: 0,
+                disponible: 0,
+                consumido: 0,
+                restarSobre: 0
             };
 
-            window.state.categories.forEach((cat, cIdx) => {
+            categories.forEach((cat, cIdx) => {
                 const cuantos_dias = calculateCalendarDaysRemaining(cat.actual, cat.end);
                 
-                const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
-                const gasto_por_dia = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
-                
-                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
-                const resultado_saldo = remainingDays * gasto_por_dia;
-                
-                const saldo_tarjeta = cat.saldoTarjeta;
-                const faltante = resultado_saldo - saldo_tarjeta;
+                if (isTarjetas) {
+                    const linea = cat.lineaCredito || 0;
+                    const disp = cat.disponible !== undefined ? cat.disponible : 0;
+                    const consumido = linea - disp;
+                    const restarSobre = cat.restarSobre || 0;
+                    const abonado = cat.saldoTarjeta || 0;
+                    
+                    const faltante = Math.max(0, consumido - abonado);
 
-                const elCuantos = document.getElementById(`calc-cuantos_dias-${cIdx}`);
-                if (elCuantos) elCuantos.innerHTML = `<span class="font-bold text-slate-300">${cuantos_dias}</span>`;
+                    const elCuantos = document.getElementById(`calc-cuantos_dias-${cIdx}`);
+                    if (elCuantos) elCuantos.innerHTML = `<span class="font-bold text-slate-300">${cuantos_dias}</span>`;
 
-                const elGastoDia = document.getElementById(`calc-gasto_por_dia-${cIdx}`);
-                if (elGastoDia) elGastoDia.innerHTML = `<span class="font-bold text-slate-200">${formatPEN(gasto_por_dia)}</span>`;
+                    const elConsumido = document.getElementById(`calc-consumido-${cIdx}`);
+                    if (elConsumido) elConsumido.innerHTML = `<span class="font-black text-rose-400">-${formatPEN(consumido)}</span>`;
 
-                const elResSaldo = document.getElementById(`calc-resultado_saldo-${cIdx}`);
-                if (elResSaldo) elResSaldo.innerHTML = `<span class="font-bold text-slate-200">${formatPEN(resultado_saldo)}</span>`;
+                    const elFaltante = document.getElementById(`calc-faltante-${cIdx}`);
+                    if (elFaltante) {
+                        const hasDeficit = faltante > 0;
+                        const glowClass = hasDeficit ? 'text-glow-red font-extrabold animate-pulse' : 'text-glow-green font-extrabold';
+                        elFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(faltante)}</span>`;
+                    }
 
-                const elFaltante = document.getElementById(`calc-faltante-${cIdx}`);
-                if (elFaltante) {
-                    const hasDeficit = faltante > 0;
-                    const glowClass = hasDeficit ? 'text-glow-red font-extrabold animate-pulse' : 'text-glow-green font-extrabold';
-                    elFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(faltante)}</span>`;
+                    totals.lineaCredito += linea;
+                    totals.disponible += disp;
+                    totals.consumido += consumido;
+                    totals.restarSobre += restarSobre;
+                    totals.saldoTarjeta += abonado;
+                    totals.faltante += faltante;
+
+                } else {
+                    const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
+                    const gasto_por_dia = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
+                    
+                    const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
+                    const resultado_saldo = remainingDays * gasto_por_dia;
+                    
+                    const saldo_tarjeta = cat.saldoTarjeta || 0;
+                    const faltante = resultado_saldo - saldo_tarjeta;
+
+                    const elCuantos = document.getElementById(`calc-cuantos_dias-${cIdx}`);
+                    if (elCuantos) elCuantos.innerHTML = `<span class="font-bold text-slate-300">${cuantos_dias}</span>`;
+
+                    const elGastoDia = document.getElementById(`calc-gasto_por_dia-${cIdx}`);
+                    if (elGastoDia) elGastoDia.innerHTML = `<span class="font-bold text-slate-200">${formatPEN(gasto_por_dia)}</span>`;
+
+                    const elResSaldo = document.getElementById(`calc-resultado_saldo-${cIdx}`);
+                    if (elResSaldo) elResSaldo.innerHTML = `<span class="font-bold text-slate-200">${formatPEN(resultado_saldo)}</span>`;
+
+                    const elFaltante = document.getElementById(`calc-faltante-${cIdx}`);
+                    if (elFaltante) {
+                        const hasDeficit = faltante > 0;
+                        const glowClass = hasDeficit ? 'text-glow-red font-extrabold animate-pulse' : 'text-glow-green font-extrabold';
+                        elFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(faltante)}</span>`;
+                    }
+
+                    totals.income += cat.income;
+                    totals.gasto_por_dia += gasto_por_dia;
+                    totals.resultado_saldo += resultado_saldo;
+                    totals.saldoTarjeta += saldo_tarjeta;
+                    totals.faltante += faltante;
                 }
-
-                totals.income += cat.income;
-                totals.gasto_por_dia += gasto_por_dia;
-                totals.resultado_saldo += resultado_saldo;
-                totals.saldoTarjeta += saldo_tarjeta;
-                totals.faltante += faltante;
             });
 
-            const tIncome = document.getElementById('total-val-ingreso_gasto');
-            if (tIncome) tIncome.innerHTML = `<span class="font-black text-white">${formatPEN(totals.income)}</span>`;
+            // Actualizar Totales en Tabla
+            if (isTarjetas) {
+                const tLinea = document.getElementById('total-val-linea_credito');
+                if (tLinea) tLinea.innerHTML = `<span class="font-black text-amber-300">${formatPEN(totals.lineaCredito)}</span>`;
 
-            const tGasto = document.getElementById('total-val-gasto_por_dia');
-            if (tGasto) tGasto.innerHTML = `<span class="font-black text-white">${formatPEN(totals.gasto_por_dia)}</span>`;
+                const tDisp = document.getElementById('total-val-disponible');
+                if (tDisp) tDisp.innerHTML = `<span class="font-black text-emerald-400">${formatPEN(totals.disponible)}</span>`;
 
-            const tRes = document.getElementById('total-val-resultado_saldo');
-            if (tRes) tRes.innerHTML = `<span class="font-black text-white">${formatPEN(totals.resultado_saldo)}</span>`;
+                const tCons = document.getElementById('total-val-consumido');
+                if (tCons) tCons.innerHTML = `<span class="font-black text-rose-400">-${formatPEN(totals.consumido)}</span>`;
 
-            const tTarjeta = document.getElementById('total-val-saldo_tarjeta');
-            if (tTarjeta) tTarjeta.innerHTML = `<span class="font-black text-white">${formatPEN(totals.saldoTarjeta)}</span>`;
+                const tRest = document.getElementById('total-val-restar_sobre');
+                if (tRest) tRest.innerHTML = `<span class="font-bold text-slate-300">${formatPEN(totals.restarSobre)}</span>`;
 
-            const tFaltante = document.getElementById('total-val-faltante');
-            if (tFaltante) {
-                const hasDeficit = totals.faltante > 0;
-                const glowClass = hasDeficit ? 'text-glow-red font-black' : 'text-glow-green font-black';
-                tFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(totals.faltante)}</span>`;
+                const tAbon = document.getElementById('total-val-saldo_tarjeta');
+                if (tAbon) tAbon.innerHTML = `<span class="font-black text-white">${formatPEN(totals.saldoTarjeta)}</span>`;
+
+                const tFalt = document.getElementById('total-val-faltante');
+                if (tFalt) {
+                    const hasDeficit = totals.faltante > 0;
+                    const glowClass = hasDeficit ? 'text-glow-red font-black' : 'text-glow-green font-black';
+                    tFalt.innerHTML = `<span class="${glowClass}">${formatPEN(totals.faltante)}</span>`;
+                }
+            } else {
+                const tIncome = document.getElementById('total-val-ingreso_gasto');
+                if (tIncome) tIncome.innerHTML = `<span class="font-black text-white">${formatPEN(totals.income)}</span>`;
+
+                const tGasto = document.getElementById('total-val-gasto_por_dia');
+                if (tGasto) tGasto.innerHTML = `<span class="font-black text-white">${formatPEN(totals.gasto_por_dia)}</span>`;
+
+                const tRes = document.getElementById('total-val-resultado_saldo');
+                if (tRes) tRes.innerHTML = `<span class="font-black text-white">${formatPEN(totals.resultado_saldo)}</span>`;
+
+                const tTarjeta = document.getElementById('total-val-saldo_tarjeta');
+                if (tTarjeta) tTarjeta.innerHTML = `<span class="font-black text-white">${formatPEN(totals.saldoTarjeta)}</span>`;
+
+                const tFaltante = document.getElementById('total-val-faltante');
+                if (tFaltante) {
+                    const hasDeficit = totals.faltante > 0;
+                    const glowClass = hasDeficit ? 'text-glow-red font-black' : 'text-glow-green font-black';
+                    tFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(totals.faltante)}</span>`;
+                }
             }
 
-            const elInc = document.getElementById('total-income-stat');
-            const elCrd = document.getElementById('total-card-stat');
-            const elDef = document.getElementById('total-deficit-stat');
-            
-            if (elInc) elInc.innerText = formatPEN(totals.income);
-            if (elCrd) elCrd.innerText = formatPEN(totals.saldoTarjeta);
-
-            let sumDeficitOnly = 0;
-            let categoriesWithDeficit = [];
-            window.state.categories.forEach(cat => {
-                const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
-                const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
-                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
-                const resultBudget = remainingDays * dailyRate;
-                const deficit = resultBudget - cat.saldoTarjeta;
-
-                if (deficit > 0) {
-                    sumDeficitOnly += deficit;
-                    categoriesWithDeficit.push({ name: cat.name, val: deficit });
+            // Actualizar Métricas Superiores
+            const grid = document.getElementById('advisor-stats-grid');
+            if (grid) {
+                if (isTarjetas) {
+                    grid.innerHTML = `
+                        <div>
+                            <p class="text-xs text-slate-400">Línea de Crédito Total</p>
+                            <p class="text-base sm:text-lg font-bold text-amber-300">${formatPEN(totals.lineaCredito)}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">Consumido Total</p>
+                            <p class="text-base sm:text-lg font-bold text-rose-400">${formatPEN(totals.consumido)}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">Disponible Total</p>
+                            <p class="text-base sm:text-lg font-bold text-emerald-400">${formatPEN(totals.disponible)}</p>
+                        </div>
+                    `;
+                } else {
+                    grid.innerHTML = `
+                        <div>
+                            <p class="text-xs text-slate-400">Presupuesto Inicial</p>
+                            <p class="text-base sm:text-lg font-bold text-emerald-400">${formatPEN(totals.income)}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">Saldo Tarjeta Total</p>
+                            <p class="text-base sm:text-lg font-bold text-sky-400">${formatPEN(totals.saldoTarjeta)}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">Faltante Neto</p>
+                            <p class="text-base sm:text-lg font-bold text-rose-400">${formatPEN(totals.faltante)}</p>
+                        </div>
+                    `;
                 }
-            });
+            }
 
-            if (elDef) elDef.innerText = formatPEN(sumDeficitOnly);
-
+            // Actualizar Texto del Asesor
             const advTitle = document.getElementById('advisor-title');
             const advAdvice = document.getElementById('advisor-advice');
 
             if (advTitle && advAdvice) {
-                if (sumDeficitOnly > 0) {
+                if (totals.faltante > 0) {
                     advTitle.innerText = "⚠️ Advertencia de Saldos Faltantes";
-                    let listNames = categoriesWithDeficit.map(c => `<strong>${c.name}</strong> (Faltante: ${formatPEN(c.val)})`).join(', ');
-                    advAdvice.innerHTML = `Tu saldo disponible no cubre el presupuesto restante. Registras una brecha de ${formatPEN(sumDeficitOnly)}. Se recomienda inyectar saldo a tus cuentas en: ${listNames}.`;
+                    advAdvice.innerHTML = `Tienes una brecha pendiente de <strong class="text-rose-400">${formatPEN(totals.faltante)}</strong>. Se recomienda abonar a tus tarjetas para cubrir el período.`;
                 } else {
                     advTitle.innerText = "🟢 Estado Financiero Saludable";
-                    advAdvice.innerHTML = `¡Fabuloso! Tu saldo actual en tarjeta cubre con exactitud matemática el consumo diario proyectado para lo que resta del período. Mantén este ritmo de gasto.`;
+                    advAdvice.innerHTML = `¡Fabuloso! Tus saldos cubren con exactitud matemática el gasto proyectado para este ciclo.`;
                 }
             }
+
+            saveState();
         }
 
-        /* Manejadores de eventos de entrada numérica */
-        window.updateNumericValue = function(categoryIndex, key, valString) {
-            const numericValue = parseFloat(valString) || 0;
-            if (window.state.categories[categoryIndex]) {
-                window.state.categories[categoryIndex][key] = numericValue;
-                recalculateAll();
-                window.pushToCloud();
-            }
-        };
+        function handleDateChange(catIdx, key, valString) {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod || !activeMod.categories[catIdx]) return;
 
-        window.formatNumericInput = function(inputEl, categoryIndex, key) {
+            const cat = activeMod.categories[catIdx];
+            cat[key] = valString;
+
+            // Si se cambia la Fecha de Inicio, avanzar Fecha de Término +1 Mes y calcular Saldo para Faltante = 0.00
+            if (key === 'start' && valString) {
+                const newEnd = addOneMonth(valString);
+                cat.end = newEnd;
+
+                const endInput = document.getElementById(`input-fecha_termino-${catIdx}`);
+                if (endInput) endInput.value = newEnd;
+
+                const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
+                const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
+                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
+                const requiredBalance = remainingDays * dailyRate;
+
+                cat.saldoTarjeta = requiredBalance;
+
+                const saldoInput = document.getElementById(`input-saldo_tarjeta-${catIdx}`);
+                if (saldoInput) saldoInput.value = requiredBalance.toFixed(2);
+            }
+
+            saveState();
+            recalculateAll();
+            if (activeMod.id === 'mod_tarjetas_credito') renderCardAppWidget();
+        }
+
+        function updateNumericValue(catIdx, key, valString) {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod || !activeMod.categories[catIdx]) return;
+
+            const numericValue = parseFloat(valString) || 0;
+            activeMod.categories[catIdx][key] = numericValue;
+
+            saveState();
+            recalculateAll();
+            if (activeMod.id === 'mod_tarjetas_credito') renderCardAppWidget();
+        }
+
+        function formatNumericInput(inputEl) {
             const val = parseFloat(inputEl.value) || 0;
             inputEl.value = val.toFixed(2);
-            if (window.state.categories[categoryIndex]) {
-                window.state.categories[categoryIndex][key] = val;
-                recalculateAll();
-                window.pushToCloud();
-            }
-        };
+        }
 
-        window.updateValue = function(categoryIndex, key, value) {
-            if (window.state.categories[categoryIndex]) {
-                window.state.categories[categoryIndex][key] = value;
-                recalculateAll();
-                window.pushToCloud();
-            }
-        };
-
+        /* Arrancar la Aplicación */
         window.onload = function() {
-            initApp();
+            loadState();
+            renderSidebarNav();
+            updateHeaderInfo();
             buildStaticTable();
             recalculateAll();
-
-            // Consulta inmediata al enfocar la pantalla
-            window.addEventListener('focus', () => {
-                if (typeof window.triggerManualSync === 'function') {
-                    window.triggerManualSync();
-                }
-            });
-        };
+        }
     </script>
 </body>
 </html>
