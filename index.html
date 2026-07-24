@@ -220,13 +220,17 @@
 
         <footer class="text-center py-4 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2 px-4">
             <p>© 2026 Asesor Financiero Personal. Sistema de Control Operativo.</p>
-            <div class="flex items-center gap-2 cursor-pointer hover:text-emerald-400 transition" onclick="saveState(); recalculateAll();">
-                <span class="flex h-2 w-2 relative">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span class="text-slate-400 font-medium flex items-center gap-1">
-                    <i class="fa-solid fa-rotate text-[10px]"></i> Sincronizado en tiempo real
+            
+            <!-- NUEVA FUNCIÓN DE SINCRONIZACIÓN -->
+            <div class="flex items-center gap-2">
+                <button onclick="exportState()" class="text-emerald-400 hover:text-white transition flex items-center gap-1 text-[10px] uppercase font-bold border border-emerald-500/30 px-2 py-1 rounded-lg">
+                    <i class="fa-solid fa-file-export"></i> Exportar
+                </button>
+                <button onclick="importState()" class="text-rose-400 hover:text-white transition flex items-center gap-1 text-[10px] uppercase font-bold border border-rose-500/30 px-2 py-1 rounded-lg">
+                    <i class="fa-solid fa-file-import"></i> Importar
+                </button>
+                <span class="text-slate-400 font-medium flex items-center gap-1 ml-2">
+                    <i class="fa-solid fa-rotate text-[10px]"></i> Sincronizado
                 </span>
             </div>
         </footer>
@@ -234,6 +238,50 @@
     </div>
 
     <script>
+        // ... (código existente de funciones getLocalDateString, etc.) ...
+        
+        // --- NUEVAS FUNCIONES DE SINCRONIZACIÓN ---
+        
+        function exportState() {
+            try {
+                const dataStr = JSON.stringify(window.state);
+                const base64Data = btoa(unescape(encodeURIComponent(dataStr))); // Codificación segura
+                const input = document.createElement('textarea');
+                input.value = base64Data;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert("¡Código de sincronización copiado al portapapeles! Pégalo en tu otro dispositivo usando el botón 'Importar'.");
+            } catch (e) {
+                console.error("Error al exportar", e);
+            }
+        }
+
+        function importState() {
+            const base64Data = prompt("Pega aquí el código de sincronización que copiaste de tu otro dispositivo:");
+            if (!base64Data) return;
+            
+            try {
+                const jsonStr = decodeURIComponent(escape(atob(base64Data)));
+                const parsed = JSON.parse(jsonStr);
+                
+                if (parsed && parsed.modules) {
+                    window.state = parsed;
+                    saveState();
+                    loadState();
+                    renderSidebarNav();
+                    updateHeaderInfo();
+                    recalculateAll();
+                    alert("¡Datos sincronizados exitosamente!");
+                }
+            } catch (e) {
+                alert("Error al importar: El código no es válido. Asegúrate de haber copiado el código completo.");
+            }
+        }
+
+        // ... (resto del código existente: processReceiptImage, etc.) ...
+        
         function getLocalDateString() {
             const now = new Date();
             const year = now.getFullYear();
@@ -965,7 +1013,7 @@
                 let amountVal = 0.00;
                 let dateStr = new Date().toLocaleDateString('es-PE');
 
-                const apiKey = ""; // Ingrese su API Key de Gemini aquí
+                const apiKey = ""; // API Key de Gemini
                 if (apiKey) {
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
                     // Prompt optimizado para extraer fecha, comercio y monto
