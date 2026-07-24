@@ -908,7 +908,7 @@
                                 </div>
 
                                 <!-- Lista de Movimientos Unificados -->
-                                <h5 class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Historial de Consumos y Abonos</h5>
+                                <h5 class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wide">HISTORIAL DE CONSUMOS Y ABONOS</h5>
                                 <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
                                     ${movs.length === 0 ? '<p class="text-xs text-slate-500 italic text-center py-4">No hay movimientos registrados en esta tarjeta.</p>' : ''}
                                     ${movs.map((m) => {
@@ -916,12 +916,12 @@
                                         return `
                                             <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border ${isAbono ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-slate-800/80'} hover:border-slate-700 transition">
                                                 <div class="flex items-center gap-2.5">
-                                                    <div class="p-1.5 rounded-lg ${isAbono ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'} text-xs">
+                                                    <div class="p-2 rounded-xl ${isAbono ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'} text-xs">
                                                         <i class="fa-solid ${isAbono ? 'fa-hand-holding-dollar' : 'fa-bag-shopping'}"></i>
                                                     </div>
                                                     <div>
                                                         <p class="text-xs font-bold text-white leading-tight">${m.name}</p>
-                                                        <p class="text-[10px] text-slate-400">${m.date} • <span class="${isAbono ? 'text-emerald-400 font-semibold' : 'text-amber-400'}">${isAbono ? 'Abono Realizado' : (m.status || 'Procesado')}</span></p>
+                                                        <p class="text-[10px] text-slate-400">${m.date} • <span class="${isAbono ? 'text-emerald-400 font-semibold' : 'text-amber-400'}">${isAbono ? 'Abono Realizado' : (m.status || 'En proceso')}</span></p>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-2">
@@ -963,7 +963,7 @@
                 const apiKey = "";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
-                const promptText = "Analiza este comprobante de pago o voucher de tarjeta de crédito/débito en Perú. Extrae el nombre de la empresa/tienda (store) y el monto total consumido en soles (amount, como número decimal). Responde ÚNICAMENTE en formato JSON plano sin bloques de código con este formato: {\"store\": \"Nombre Tienda\", \"amount\": 45.50}";
+                const promptText = "Analiza este comprobante de pago o voucher de tarjeta de crédito/débito en Perú. Extrae el nombre de la empresa/tienda corta y limpia (ejemplo: 'Tottus', 'El Fogón', 'Supermercados Peruanos') y el monto total consumido en soles (amount, como número decimal). Responde ÚNICAMENTE en formato JSON plano sin bloques de código con este formato: {\"store\": \"Nombre Tienda\", \"amount\": 45.50}";
 
                 const payload = {
                     contents: [{
@@ -1001,7 +1001,7 @@
                     }
                 }
 
-                const storeName = parsed.store || "Compra con Boleta IA";
+                const storeName = parsed.store || "Compra con Boleta";
                 const amountVal = parseFloat(parsed.amount) || 15.00;
 
                 const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
@@ -1012,15 +1012,20 @@
                     const now = new Date();
                     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
                     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-                    const timeStr = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+                    let hours = now.getHours();
+                    const ampm = hours >= 12 ? 'pm' : 'am';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12;
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const timeStr = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${hours}:${minutes} ${ampm}`;
 
                     cat.movements.unshift({
                         id: 'mov_ai_' + Date.now(),
-                        name: storeName + ' 📸 (Escaneado IA)',
+                        name: storeName,
                         amount: amountVal,
                         type: 'gasto',
                         date: timeStr,
-                        status: 'Procesado'
+                        status: 'En proceso'
                     });
 
                     saveState();
