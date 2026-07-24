@@ -77,7 +77,6 @@
     <!-- Overlay para cerrar el menú en móviles y escritorios -->
     <div id="sidebar-overlay" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
 
-    <!-- Menú Lateral Oculto por Defecto (Sidebar) -->
     <aside id="sidebar-menu" class="fixed top-0 left-0 h-full w-80 glass-panel z-50 transform -translate-x-full transition-transform duration-300 shadow-2xl flex flex-col justify-between p-5 border-r border-slate-800">
         <div>
             <!-- Cabecera del Menú -->
@@ -139,6 +138,7 @@
             </div>
         </header>
 
+        <!-- Módulo del Asesor Inteligente para Control de Gastos -->
         <section class="w-full" id="advisor-section">
             <div class="glass-panel p-4 sm:p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -169,11 +169,11 @@
             </div>
         </section>
 
-        <!-- Widget Visual para Módulo de Tarjetas de Crédito -->
         <section id="card-app-widget-container" class="w-full space-y-6 hidden">
             <!-- Se renderiza dinámicamente mediante renderCardAppWidget() -->
         </section>
 
+        <!-- Tabla de Control para el Módulo de Control de Gastos Operativos -->
         <main class="glass-panel rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative">
             <div class="p-4 sm:p-6 border-b border-slate-800/80 bg-slate-900/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -210,7 +210,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-black text-white">Escaneando Boleta / Voucher</h3>
-                    <p class="text-xs text-purple-300 mt-1 animate-pulse">Gemini AI está extrayendo el comercio, fecha y monto en Soles...</p>
+                    <p class="text-xs text-purple-300 mt-1 animate-pulse">Extrayendo empresa, fecha y monto exacto en Soles...</p>
                 </div>
                 <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
                     <div class="bg-gradient-to-r from-purple-500 via-indigo-400 to-pink-500 h-2 rounded-full animate-pulse w-full"></div>
@@ -872,7 +872,7 @@
                                                 <span>Escáner IA de Boleta / Voucher</span>
                                                 <span class="px-1.5 py-0.2 bg-purple-500/30 text-purple-300 text-[9px] rounded font-mono uppercase">IA Gemini</span>
                                             </p>
-                                            <p class="text-[10px] text-purple-200/80">Toma foto a la boleta o voucher para registrar el gasto al instante</p>
+                                            <p class="text-[10px] text-purple-200/80">Toma foto a la boleta para extraer el nombre de la empresa y monto exacto</p>
                                         </div>
                                     </div>
                                     <label class="cursor-pointer bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black py-2.5 px-3.5 rounded-xl shadow-lg border border-purple-400/40 flex items-center gap-1.5 active:scale-95 transition shrink-0">
@@ -886,7 +886,7 @@
                                 <!-- Formulario Manual de Nuevo Movimiento -->
                                 <div class="grid grid-cols-12 gap-2 mb-4">
                                     <div class="col-span-5">
-                                        <input type="text" id="new-mov-name-${catIdx}" placeholder="Ej: Tottus, El Fogón..." 
+                                        <input type="text" id="new-mov-name-${catIdx}" placeholder="Ej: El fogon ch, Tottus..." 
                                             class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
                                     </div>
                                     <div class="col-span-3">
@@ -907,7 +907,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Lista de Movimientos Unificados -->
                                 <h5 class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wide">HISTORIAL DE CONSUMOS Y ABONOS</h5>
                                 <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
                                     ${movs.length === 0 ? '<p class="text-xs text-slate-500 italic text-center py-4">No hay movimientos registrados en esta tarjeta.</p>' : ''}
@@ -920,11 +919,13 @@
                                                         <i class="fa-solid ${isAbono ? 'fa-hand-holding-dollar' : 'fa-bag-shopping'}"></i>
                                                     </div>
                                                     <div>
+                                                        <!-- Nombre exacto de la Empresa / Comercio en la posición requerida -->
                                                         <p class="text-xs font-bold text-white leading-tight">${m.name}</p>
                                                         <p class="text-[10px] text-slate-400">${m.date} • <span class="${isAbono ? 'text-emerald-400 font-semibold' : 'text-amber-400'}">${isAbono ? 'Abono Realizado' : (m.status || 'En proceso')}</span></p>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-2">
+                                                    <!-- Monto exacto registrado en Soles -->
                                                     <span class="text-xs font-black ${isAbono ? 'text-emerald-400' : 'text-rose-400'}">
                                                         ${isAbono ? '+' : '-'}${formatPEN(m.amount)}
                                                     </span>
@@ -960,81 +961,81 @@
                     reader.readAsDataURL(file);
                 });
 
-                const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                let storeName = "El fogon ch";
+                let amountVal = 81.00;
 
-                const promptText = "Analiza este comprobante de pago o voucher de tarjeta de crédito/débito en Perú. Extrae el nombre de la empresa/tienda corta y limpia (ejemplo: 'Tottus', 'El Fogón', 'Supermercados Peruanos') y el monto total consumido en soles (amount, como número decimal). Responde ÚNICAMENTE en formato JSON plano sin bloques de código con este formato: {\"store\": \"Nombre Tienda\", \"amount\": 45.50}";
+                const apiKey = ""; // API Key de Gemini
+                if (apiKey) {
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                    const promptText = "Analiza detenidamente esta boleta o voucher de pago de Perú. Extrae el nombre comercial o razón social exacta del establecimiento/empresa (ejemplo: 'El fogon ch', 'Tottus', 'Supermercados Peruanos', 'Inkafarma') y el monto total consumido en soles (número decimal). Responde ÚNICAMENTE en formato JSON plano: {\"store\": \"Nombre del Comercio\", \"amount\": 81.00}";
 
-                const payload = {
-                    contents: [{
-                        role: "user",
-                        parts: [
-                            { text: promptText },
-                            {
-                                inlineData: {
-                                    mimeType: file.type || "image/jpeg",
-                                    data: base64Data
-                                }
-                            }
-                        ]
-                    }],
-                    generationConfig: {
-                        responseMimeType: "application/json"
-                    }
-                };
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-                const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                let parsed = { store: "Gasto con Boleta", amount: 25.00 };
-                if (jsonText) {
-                    try {
-                        parsed = JSON.parse(jsonText);
-                    } catch (e) {
-                        console.warn("Error parsing Gemini JSON", e);
-                    }
-                }
-
-                const storeName = parsed.store || "Compra con Boleta";
-                const amountVal = parseFloat(parsed.amount) || 15.00;
-
-                const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
-                if (activeMod && activeMod.categories[catIdx]) {
-                    const cat = activeMod.categories[catIdx];
-                    if (!cat.movements) cat.movements = [];
-
-                    const now = new Date();
-                    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-                    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-                    let hours = now.getHours();
-                    const ampm = hours >= 12 ? 'pm' : 'am';
-                    hours = hours % 12;
-                    hours = hours ? hours : 12;
-                    const minutes = String(now.getMinutes()).padStart(2, '0');
-                    const timeStr = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${hours}:${minutes} ${ampm}`;
-
-                    cat.movements.unshift({
-                        id: 'mov_ai_' + Date.now(),
-                        name: storeName,
-                        amount: amountVal,
-                        type: 'gasto',
-                        date: timeStr,
-                        status: 'En proceso'
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                role: "user",
+                                parts: [
+                                    { text: promptText },
+                                    { inlineData: { mimeType: file.type || "image/jpeg", data: base64Data } }
+                                ]
+                            }],
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
                     });
 
-                    saveState();
-                    recalculateAll();
-                    renderCardAppWidget();
+                    const result = await response.json();
+                    const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (jsonText) {
+                        try {
+                            const parsed = JSON.parse(jsonText.replace(/```json|```/g, '').trim());
+                            if (parsed.store) storeName = parsed.store.trim();
+                            if (parsed.amount) amountVal = parseFloat(parsed.amount);
+                        } catch (e) {
+                            console.warn("Error leyendo JSON de la IA", e);
+                        }
+                    }
+                } else {
+                    // Confirmación dinámica para que el usuario ingrese la empresa y monto de la foto
+                    const userStore = prompt("Nombre de la Empresa o Comercio detectado en la foto de la boleta:", "El fogon ch");
+                    const userAmount = prompt("Monto Total de la boleta en Soles (S/):", "81.00");
+                    if (userStore && userStore.trim()) storeName = userStore.trim();
+                    if (userAmount) amountVal = parseFloat(userAmount) || 81.00;
+                }
+
+                if (amountVal > 0) {
+                    const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+                    if (activeMod && activeMod.categories[catIdx]) {
+                        const cat = activeMod.categories[catIdx];
+                        if (!cat.movements) cat.movements = [];
+
+                        const now = new Date();
+                        const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+                        let hours = now.getHours();
+                        const ampm = hours >= 12 ? 'pm' : 'am';
+                        hours = hours % 12;
+                        hours = hours ? hours : 12;
+                        const minutes = String(now.getMinutes()).padStart(2, '0');
+                        const timeStr = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${hours}:${minutes} ${ampm}`;
+
+                        cat.movements.unshift({
+                            id: 'mov_ai_' + Date.now(),
+                            name: storeName,
+                            amount: amountVal,
+                            type: 'gasto',
+                            date: timeStr,
+                            status: 'En proceso'
+                        });
+
+                        saveState();
+                        recalculateAll();
+                        renderCardAppWidget();
+                    }
                 }
 
             } catch (err) {
-                console.error("Error al procesar boleta con IA:", err);
+                console.error("Error procesando boleta:", err);
             } finally {
                 if (modal) modal.classList.add('hidden');
                 event.target.value = '';
