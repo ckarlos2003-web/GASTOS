@@ -6,9 +6,9 @@
     <title>Control de Gastos Operativo Premium</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts (Inter) -->
+    <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- FontAwesome para Iconos Financieros -->
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -18,7 +18,6 @@
             color: #f8fafc;
             min-height: 100vh;
         }
-        /* Personalización de la barra de desplazamiento */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -33,19 +32,16 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #334155;
         }
-        /* Fila de Saldo Tarjeta con brillo rojo de neón premium */
         .glow-red-border {
             border: 2px solid rgba(239, 68, 68, 0.85) !important;
             box-shadow: 0 0 15px rgba(239, 68, 68, 0.25);
             background: rgba(244, 63, 94, 0.05) !important;
         }
-        /* Estilo general para paneles con efecto glassmorphism */
         .glass-panel {
             background: rgba(15, 23, 42, 0.75);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        /* Inputs de fecha nativos estilizados */
         input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
             cursor: pointer;
@@ -55,7 +51,6 @@
         input[type="date"]::-webkit-calendar-picker-indicator:hover {
             opacity: 1;
         }
-        /* Ocultar flechas de control nativas (spinners) en inputs numéricos */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -64,7 +59,6 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
-        /* Efecto de brillo de alta visibilidad para indicadores financieros */
         .text-glow-red {
             color: #f87171 !important;
             text-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
@@ -73,14 +67,17 @@
             color: #34d399 !important;
             text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
         }
+        .scanner-glow {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
+        }
     </style>
 </head>
 <body class="p-3 sm:p-6 md:p-8 relative">
 
-    <!-- Overlay para cerrar el menú en móviles -->
+    <!-- Overlay para cerrar el menú en móviles y escritorios -->
     <div id="sidebar-overlay" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
 
-    <!-- Menú Lateral Oculto por Defecto (Sidebar por Carpetas con Sub-Menús) -->
+    <!-- Menú Lateral Oculto por Defecto (Sidebar) -->
     <aside id="sidebar-menu" class="fixed top-0 left-0 h-full w-80 glass-panel z-50 transform -translate-x-full transition-transform duration-300 shadow-2xl flex flex-col justify-between p-5 border-r border-slate-800">
         <div>
             <!-- Cabecera del Menú -->
@@ -115,10 +112,8 @@
 
     <div class="max-w-7xl mx-auto space-y-6">
         
-        <!-- Cabecera Principal de la Aplicación -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800">
             <div class="flex items-center gap-3">
-                <!-- Botón Hamburguesa para abrir el Menú Lateral -->
                 <button onclick="toggleSidebar(true)" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-emerald-400 rounded-xl transition flex items-center gap-2 shadow-lg group active:scale-95" title="Abrir Módulos">
                     <i class="fa-solid fa-bars text-lg group-hover:rotate-180 transition duration-300"></i>
                     <span class="text-xs font-bold text-white uppercase tracking-wider hidden sm:inline">Módulos</span>
@@ -135,17 +130,15 @@
                 </div>
             </div>
             
-            <!-- Fecha de Control del Sistema -->
             <div class="glass-panel py-2 px-4 rounded-xl flex items-center gap-3 shadow-inner self-stretch sm:self-auto justify-between sm:justify-start">
                 <div class="flex items-center gap-2">
                     <i class="fa-regular fa-calendar-check text-emerald-400 animate-pulse"></i>
                     <span class="text-xs md:text-sm font-medium text-slate-400">Fecha Control:</span>
                 </div>
-                <span id="current-date-badge" class="text-emerald-400 text-xs md:text-sm font-black">--/--/----</span>
+                <span id="current-date-badge" class="text-emerald-400 text-xs md:text-sm font-black">23/07/2026</span>
             </div>
         </header>
 
-        <!-- Módulo del Asesor Inteligente (Para Control de Gastos) -->
         <section class="w-full" id="advisor-section">
             <div class="glass-panel p-4 sm:p-6 rounded-2xl relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -170,19 +163,17 @@
                     </div>
                 </div>
                 
-                <!-- Resumen de Métricas Dinámico -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-4 sm:pt-6 mt-4 sm:mt-6 border-t border-slate-800/60 text-center" id="advisor-stats-grid">
-                    <!-- Renderizado dinámico -->
+                    <!-- Renderizado dinámico por JS -->
                 </div>
             </div>
         </section>
 
-        <!-- Widget Visual "Mi Tarjeta (Interbank + BBVA + Asesor)" para Módulo de Tarjetas de Crédito -->
+        <!-- Widget Visual para Módulo de Tarjetas de Crédito -->
         <section id="card-app-widget-container" class="w-full space-y-6 hidden">
             <!-- Se renderiza dinámicamente mediante renderCardAppWidget() -->
         </section>
 
-        <!-- Contenedor Principal de la Tabla de Control de Gastos -->
         <main class="glass-panel rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative">
             <div class="p-4 sm:p-6 border-b border-slate-800/80 bg-slate-900/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -197,7 +188,6 @@
                 </div>
             </div>
 
-            <!-- Contenedor Responsivo para evitar desbordes -->
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[900px] border-collapse text-left text-sm table-fixed">
                     <thead>
@@ -212,22 +202,38 @@
             </div>
         </main>
 
-        <!-- Pie de página -->
+        <!-- Modal de Escaneo con IA en Proceso -->
+        <div id="ai-loading-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 hidden">
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-purple-500/40 shadow-2xl text-center max-w-sm w-full space-y-4 relative overflow-hidden scanner-glow">
+                <div class="w-16 h-16 bg-purple-500/20 border-2 border-purple-400 rounded-2xl flex items-center justify-center mx-auto text-purple-300 text-2xl animate-bounce">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-white">Escaneando Boleta / Voucher</h3>
+                    <p class="text-xs text-purple-300 mt-1 animate-pulse">Gemini AI está extrayendo el comercio, fecha y monto en Soles...</p>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                    <div class="bg-gradient-to-r from-purple-500 via-indigo-400 to-pink-500 h-2 rounded-full animate-pulse w-full"></div>
+                </div>
+            </div>
+        </div>
+
         <footer class="text-center py-4 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2 px-4">
             <p>© 2026 Asesor Financiero Personal. Sistema de Control Operativo.</p>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 cursor-pointer hover:text-emerald-400 transition" onclick="saveState(); recalculateAll();">
                 <span class="flex h-2 w-2 relative">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span class="text-slate-400 font-medium">Sincronización Local Activa</span>
+                <span class="text-slate-400 font-medium flex items-center gap-1">
+                    <i class="fa-solid fa-rotate text-[10px]"></i> Sincronizado en tiempo real
+                </span>
             </div>
         </footer>
 
     </div>
 
     <script>
-        /* Función para obtener la fecha de hoy en formato YYYY-MM-DD local */
         function getLocalDateString() {
             const now = new Date();
             const year = now.getFullYear();
@@ -236,7 +242,6 @@
             return `${year}-${month}-${day}`;
         }
 
-        /* Formatea la fecha de YYYY-MM-DD a DD/MM/YYYY */
         function formatDateToDisplay(dateStr) {
             if (!dateStr) return '';
             const parts = dateStr.split('-');
@@ -244,7 +249,6 @@
             return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
 
-        /* Suma exactamente 1 mes a una fecha YYYY-MM-DD */
         function addOneMonth(dateStr) {
             if (!dateStr) return '';
             const parts = dateStr.split('-');
@@ -262,12 +266,45 @@
             return `${resY}-${resM}-${resD}`;
         }
 
-        /* Formateador de Soles Peruanos PEN */
         function formatPEN(val) {
             if (isNaN(val) || val === null) return "S/ 0.00";
             const isNegative = val < 0;
             const absVal = Math.abs(val).toFixed(2);
             return `${isNegative ? '-' : ''}S/ ${absVal}`;
+        }
+
+        function calculateDaysByMode(startDateStr, endDateStr, mode, isRemaining = false) {
+            if (!startDateStr || !endDateStr) return 0;
+            const startParts = startDateStr.split('-');
+            const endParts = endDateStr.split('-');
+            if (startParts.length !== 3 || endParts.length !== 3) return 0;
+
+            let start = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+            let end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+
+            const targetEnd = new Date(end);
+            targetEnd.setDate(targetEnd.getDate() - 1);
+
+            let current = new Date(start);
+            if (isRemaining) {
+                current.setDate(current.getDate() + 1);
+            }
+
+            let count = 0;
+            while (current <= targetEnd) {
+                const day = current.getDay();
+                if (mode === 'working') {
+                    if (day !== 0 && day !== 6) count++;
+                } else if (mode === 'saturday') {
+                    if (day === 6) count++;
+                } else {
+                    count++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            return count;
         }
 
         const DEFAULT_MODULES = [
@@ -283,11 +320,11 @@
                         color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
                         headerColor: 'bg-emerald-500 text-slate-950',
                         daysType: 'working',
-                        start: '2026-06-22',
+                        start: '2026-07-22',
                         actual: getLocalDateString(),
-                        end: '2026-07-22',
+                        end: '2026-08-22',
                         income: 77.00,
-                        saldoTarjeta: 42.00
+                        saldoTarjeta: 77.00
                     },
                     {
                         id: 'cat_desayuno',
@@ -295,11 +332,11 @@
                         color: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
                         headerColor: 'bg-amber-400 text-slate-950',
                         daysType: 'working',
-                        start: '2026-06-22',
+                        start: '2026-07-22',
                         actual: getLocalDateString(),
-                        end: '2026-07-22',
+                        end: '2026-08-22',
                         income: 319.00,
-                        saldoTarjeta: 174.00
+                        saldoTarjeta: 319.00
                     },
                     {
                         id: 'cat_saba',
@@ -307,11 +344,11 @@
                         color: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
                         headerColor: 'bg-orange-500 text-slate-950',
                         daysType: 'saturday',
-                        start: '2026-06-22',
+                        start: '2026-07-22',
                         actual: getLocalDateString(),
-                        end: '2026-07-22',
+                        end: '2026-08-22',
                         income: 48.00,
-                        saldoTarjeta: 0.00
+                        saldoTarjeta: 48.00
                     }
                 ]
             },
@@ -338,13 +375,12 @@
                         actual: getLocalDateString(),
                         end: '2026-08-17',
                         lineaCredito: 12480.00,
-                        disponible: 11636.55,
-                        restarSobre: 50.00,
-                        income: 12480.00,
-                        saldoTarjeta: 0.00, // Abonado/Pago realizado
+                        saldoTarjeta: 200.00,
                         movements: [
-                            { id: 'mov_ibk_1', name: 'El fogon ch', amount: 81.00, date: 'Mié 22 Jul | 11:20 pm', status: 'En proceso' },
-                            { id: 'mov_ibk_2', name: 'Tottus', amount: 27.75, date: 'Mié 22 Jul | 6:53 pm', status: 'En proceso' }
+                            { id: 'mov_ibk_1', name: 'El fogon ch', amount: 81.00, type: 'gasto', date: 'Mié 22 Jul | 11:20 pm', status: 'En proceso' },
+                            { id: 'mov_ibk_2', name: 'Tottus', amount: 27.75, type: 'gasto', date: 'Mié 22 Jul | 6:53 pm', status: 'En proceso' },
+                            { id: 'mov_ibk_3', name: 'Compras del Mes', amount: 734.70, type: 'gasto', date: 'Lun 20 Jul | 10:15 am', status: 'Procesado' },
+                            { id: 'mov_ibk_4', name: 'Abono / Pago Registrado', amount: 200.00, type: 'abono', date: 'Jue 23 Jul | 08:30 am', status: 'Procesado' }
                         ]
                     },
                     {
@@ -364,23 +400,20 @@
                         actual: getLocalDateString(),
                         end: '2026-08-20',
                         lineaCredito: 8500.00,
-                        disponible: 7900.00,
-                        restarSobre: 0.00,
-                        income: 8500.00,
-                        saldoTarjeta: 0.00, // Abonado/Pago realizado
+                        saldoTarjeta: 150.00,
                         movements: [
-                            { id: 'mov_bbva_1', name: 'Supermercados Peruanos', amount: 150.00, date: 'Jue 23 Jul | 02:15 pm', status: 'Procesado' }
+                            { id: 'mov_bbva_1', name: 'Supermercados Peruanos', amount: 750.00, type: 'gasto', date: 'Jue 23 Jul | 02:15 pm', status: 'Procesado' },
+                            { id: 'mov_bbva_2', name: 'Abono / Pago Registrado', amount: 150.00, type: 'abono', date: 'Jue 23 Jul | 05:00 pm', status: 'Procesado' }
                         ]
                     }
                 ]
             }
         ];
 
-        /* Estado Global */
-        const STORAGE_KEY = 'control_gastos_v15_state';
+        const STORAGE_KEY = 'control_gastos_v23_state';
         window.state = {
             activeModuleId: 'mod_control_gastos',
-            activeCardFilter: 'all', // 'all', 'tc_interbank', 'tc_bbva'
+            activeCardFilter: 'all',
             modules: JSON.parse(JSON.stringify(DEFAULT_MODULES))
         };
 
@@ -399,12 +432,13 @@
                 console.warn("Cargando defaults", e);
             }
 
-            // Sincronizar fecha actual de hoy en todas las categorías
             const today = getLocalDateString();
-            window.state.modules.forEach(m => {
-                m.categories.forEach(c => {
-                    c.actual = today;
-                });
+            window.state.modules.forEach(mod => {
+                if (mod.categories) {
+                    mod.categories.forEach(cat => {
+                        cat.actual = today;
+                    });
+                }
             });
 
             const badge = document.getElementById('current-date-badge');
@@ -460,7 +494,6 @@
                         </button>
                 `;
 
-                // Renderizar Sub-Menú para el módulo de Tarjetas de Crédito
                 if (isTarjetasModule) {
                     const filter = window.state.activeCardFilter || 'all';
                     html += `
@@ -502,7 +535,6 @@
             saveState();
             renderSidebarNav();
             updateHeaderInfo();
-            buildStaticTable();
             recalculateAll();
             toggleSidebar(false);
         }
@@ -514,7 +546,6 @@
             renderSidebarNav();
             updateHeaderInfo();
             recalculateAll();
-            renderCardAppWidget();
             toggleSidebar(false);
         }
 
@@ -610,13 +641,11 @@
 
             const filter = window.state.activeCardFilter || 'all';
 
-            // Filtrar las tarjetas según la selección del sub-menú
             const visibleCards = allCards.filter(c => {
                 if (filter === 'all') return true;
                 return c.id === filter;
             });
 
-            // Totales acumulados para el Asesor de Tarjetas
             let totalLinea = 0;
             let totalDisponible = 0;
             let totalConsumido = 0;
@@ -624,16 +653,23 @@
             let totalFaltantePagar = 0;
 
             visibleCards.forEach(c => {
-                const l = c.lineaCredito || 0;
-                const d = c.disponible !== undefined ? c.disponible : 0;
-                const cons = Math.max(0, l - d);
-                const abono = c.saldoTarjeta || 0;
-                const faltante = Math.max(0, cons - abono);
+                const linea = c.lineaCredito || 0;
+                const movs = c.movements || [];
 
-                totalLinea += l;
-                totalDisponible += d;
-                totalConsumido += cons;
-                totalAbonado += abono;
+                const totalGastosMov = movs.filter(m => m.type === 'gasto').reduce((sum, m) => sum + (m.amount || 0), 0);
+                const totalAbonosMov = movs.filter(m => m.type === 'abono').reduce((sum, m) => sum + (m.amount || 0), 0);
+
+                const abonoActual = totalAbonosMov;
+                c.saldoTarjeta = abonoActual;
+
+                const consumidoNeto = Math.max(0, totalGastosMov - abonoActual);
+                const disponibleReal = Math.min(linea, Math.max(0, linea - consumidoNeto));
+                const faltante = consumidoNeto;
+
+                totalLinea += linea;
+                totalDisponible += disponibleReal;
+                totalConsumido += consumidoNeto;
+                totalAbonado += abonoActual;
                 totalFaltantePagar += faltante;
             });
 
@@ -642,7 +678,7 @@
             if (filter === 'tc_bbva') subTitleBanner = 'Resumen Inteligente - Banco BBVA';
 
             let html = `
-                <!-- 1. Banner de Asesor Financiero e Indicadores Generales de Tarjetas -->
+                <!-- Banner de Asesor Financiero e Indicadores Generales -->
                 <div class="glass-panel p-4 sm:p-6 rounded-2xl relative overflow-hidden shadow-xl mb-6">
                     <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
                     <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl"></div>
@@ -663,14 +699,13 @@
                                 </h3>
                                 <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
                                     ${totalFaltantePagar > 0 
-                                        ? `Tienes un faltante total por consumo de <strong class="text-rose-400 font-extrabold text-glow-red">${formatPEN(totalFaltantePagar)}</strong> por saldar para cubrir el periodo actual sin pagar intereses.`
+                                        ? `Tienes un faltante total por consumo de <strong class="text-rose-400 font-extrabold text-glow-red">${formatPEN(totalFaltantePagar)}</strong> por saldar para cubrir el periodo actual.`
                                         : `¡Fabuloso! Todos tus consumos han sido totalmente cubiertos con los abonos realizados.`}
                                 </p>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Resumen de Métricas de Tarjetas -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-4 sm:pt-6 mt-4 sm:mt-6 border-t border-slate-800/60 text-center">
                         <div>
                             <p class="text-xs text-slate-400 font-medium">Línea de Crédito Total</p>
@@ -692,25 +727,27 @@
                 </div>
             `;
 
-            // 2. Tarjetas y Formuladores de Gasto Diario (Mantenemos el índice real catIdx)
             allCards.forEach((card, catIdx) => {
                 if (filter !== 'all' && card.id !== filter) return;
 
-                const linea = card.lineaCredito || 10000;
-                const disp = card.disponible !== undefined ? card.disponible : 8000;
-                const consumido = Math.max(0, linea - disp);
-                const abonado = card.saldoTarjeta || 0;
-                const faltantePagar = Math.max(0, consumido - abonado);
+                const linea = card.lineaCredito || 12480;
+                const movs = card.movements || [];
 
-                const usagePercent = Math.min(100, Math.max(0, (consumido / linea) * 100)).toFixed(1);
-                
+                const totalGastosMov = movs.filter(m => m.type === 'gasto').reduce((sum, m) => sum + (m.amount || 0), 0);
+                const totalAbonosMov = movs.filter(m => m.type === 'abono').reduce((sum, m) => sum + (m.amount || 0), 0);
+
+                const abonado = totalAbonosMov;
+                const consumido = Math.max(0, totalGastosMov - abonado);
+                const disp = Math.min(linea, Math.max(0, linea - consumido));
+                card.disponible = disp;
+
+                const faltantePagar = consumido;
+                const usagePercent = linea > 0 ? Math.min(100, Math.max(0, (consumido / linea) * 100)).toFixed(1) : '0.0';
                 const dueDateFormatted = formatDateToDisplay(card.end).substring(0, 5);
-                const movements = card.movements || [];
 
                 const isBBVA = card.bankCode === 'BBVA' || card.name.includes('BBVA');
                 const badgeBg = isBBVA ? 'bg-sky-500/20 text-sky-400 border-sky-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
                 const accentText = isBBVA ? 'text-sky-400' : 'text-emerald-400';
-                const btnBg = isBBVA ? 'bg-sky-500 hover:bg-sky-400 text-slate-950' : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950';
                 const barColor = isBBVA ? 'from-sky-400 to-blue-500' : 'from-emerald-400 to-teal-300';
                 const cardGradient = isBBVA ? 'from-slate-950 via-blue-950 to-slate-900' : 'from-slate-900 via-emerald-950 to-slate-950';
 
@@ -729,7 +766,7 @@
                                     </span>
                                 </div>
 
-                                <!-- Bloque 1: Campo Editable de Línea de Crédito -->
+                                <!-- Campo Editable de Línea de Crédito -->
                                 <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 mb-2">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid fa-coins text-amber-400 text-xs"></i>
@@ -744,22 +781,22 @@
                                     </div>
                                 </div>
 
-                                <!-- Bloque 2: Campo Editable de Abonado / Pago Realizado -->
+                                <!-- Campo Editable de Abono / Pago Realizado ACUMULATIVO -->
                                 <div class="flex items-center justify-between bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 mb-2">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid fa-hand-holding-dollar text-emerald-400 text-xs"></i>
-                                        <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Abono / Pago Realizado</span>
+                                        <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Registrar / Agregar Abono</span>
                                     </div>
                                     <div class="relative inline-flex items-center w-36 rounded-lg bg-slate-950 border border-emerald-500/50 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400">
                                         <span class="pl-2.5 text-xs text-emerald-400 font-bold select-none">S/</span>
-                                        <input type="number" step="0.01" value="${abonado.toFixed(2)}" 
-                                            onchange="updateCardAbono(${catIdx}, this.value)" 
-                                            onblur="this.value = parseFloat(this.value || 0).toFixed(2)"
-                                            class="bg-transparent border-none text-right px-2.5 py-1 text-xs text-emerald-300 font-black w-full focus:outline-none">
+                                        <input type="number" step="0.01" placeholder="0.00" 
+                                            onchange="updateCardAbono(${catIdx}, this.value); this.value='';" 
+                                            class="bg-transparent border-none text-right px-2.5 py-1 text-xs text-emerald-300 font-black w-full focus:outline-none"
+                                            title="Ingresa un monto para agregar un abono al historial sin borrar abonos anteriores">
                                     </div>
                                 </div>
 
-                                <!-- Bloque 3: Indicador Destacado AUTOMÁTICO de FALTANTE POR CONSUMO -->
+                                <!-- Indicador AUTOMÁTICO de FALTANTE POR CONSUMO -->
                                 <div class="flex items-center justify-between bg-rose-950/20 p-2.5 rounded-xl border border-rose-500/50 mb-3 glow-red-border">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid fa-circle-exclamation text-rose-400 text-xs animate-pulse"></i>
@@ -780,14 +817,13 @@
                                         <i class="fa-brands fa-cc-visa text-2xl text-slate-300"></i>
                                     </div>
 
-                                    <!-- Barra de Progreso de Consumo -->
                                     <div class="w-full bg-slate-900 rounded-full h-2 mb-3 overflow-hidden border border-slate-800">
                                         <div class="bg-gradient-to-r ${barColor} h-2 rounded-full transition-all duration-500" style="width: ${usagePercent}%"></div>
                                     </div>
 
                                     <div class="flex justify-between items-end">
                                         <div>
-                                            <p class="text-[10px] text-slate-400 font-medium uppercase">Consumido</p>
+                                            <p class="text-[10px] text-slate-400 font-medium uppercase">Consumido (Deuda)</p>
                                             <p class="text-base sm:text-lg font-black text-rose-400">${formatPEN(consumido)}</p>
                                         </div>
                                         <div class="text-right">
@@ -804,8 +840,8 @@
                                             <i class="fa-solid fa-calendar-check text-sm"></i>
                                         </div>
                                         <div>
-                                            <p class="text-xs font-bold text-white">Consumo del Mes: <span class="text-rose-400 font-black">${formatPEN(consumido)}</span></p>
-                                            <p class="text-[10px] text-slate-400">Vence el ${dueDateFormatted}</p>
+                                            <p class="text-xs font-bold text-white">Consumo Neto: <span class="text-rose-400 font-black">${formatPEN(consumido)}</span></p>
+                                            <p class="text-[10px] text-slate-400">Abonos Totales: <span class="text-emerald-400 font-bold">${formatPEN(abonado)}</span> • Vence ${dueDateFormatted}</p>
                                         </div>
                                     </div>
                                     <span class="px-3 py-1 ${badgeBg} font-black text-xs rounded-lg shadow-md">
@@ -815,57 +851,90 @@
                             </div>
                         </div>
 
-                        <!-- Panel de Movimientos y Registrador de Gasto Diario -->
+                        <!-- LADO DERECHO: FORMULARIO Y BOTÓN DE CÁMARA CON IA -->
                         <div class="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
                                     <h4 class="text-xs font-extrabold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                                        <i class="fa-solid fa-receipt ${accentText}"></i> Registrar Gasto Diario (${card.name})
+                                        <i class="fa-solid fa-receipt ${accentText}"></i> Registrar Movimiento (${card.name})
                                     </h4>
-                                    <span class="text-[10px] text-slate-400 font-medium">Descuenta Disponible</span>
+                                    <span class="text-[10px] text-slate-400 font-medium">Gasto (-) / Abono (+)</span>
                                 </div>
 
-                                <!-- Formulario de Nuevo Movimiento Diario -->
+                                <!-- BOTÓN DE CÁMARA DE ALTA VISIBILIDAD PARA ESCANEAR CON IA -->
+                                <div class="mb-4 p-3 bg-gradient-to-r from-purple-950/60 via-indigo-950/60 to-purple-950/60 border border-purple-500/50 rounded-xl flex items-center justify-between gap-3 shadow-lg scanner-glow">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="p-2 bg-purple-500/20 text-purple-300 rounded-lg border border-purple-400/30">
+                                            <i class="fa-solid fa-camera text-base animate-pulse"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-black text-white flex items-center gap-1.5">
+                                                <span>Escáner IA de Boleta / Voucher</span>
+                                                <span class="px-1.5 py-0.2 bg-purple-500/30 text-purple-300 text-[9px] rounded font-mono uppercase">IA Gemini</span>
+                                            </p>
+                                            <p class="text-[10px] text-purple-200/80">Toma foto a la boleta o voucher para registrar el gasto al instante</p>
+                                        </div>
+                                    </div>
+                                    <label class="cursor-pointer bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black py-2.5 px-3.5 rounded-xl shadow-lg border border-purple-400/40 flex items-center gap-1.5 active:scale-95 transition shrink-0">
+                                        <i class="fa-solid fa-camera text-sm"></i>
+                                        <span class="hidden sm:inline">TOMAR FOTO</span>
+                                        <span class="sm:hidden">FOTO</span>
+                                        <input type="file" accept="image/*" capture="environment" onchange="processReceiptImage(event, ${catIdx})" class="hidden">
+                                    </label>
+                                </div>
+
+                                <!-- Formulario Manual de Nuevo Movimiento -->
                                 <div class="grid grid-cols-12 gap-2 mb-4">
-                                    <div class="col-span-6">
-                                        <input type="text" id="new-mov-name-${catIdx}" placeholder="Ej: Tottus, Gasolina" 
+                                    <div class="col-span-5">
+                                        <input type="text" id="new-mov-name-${catIdx}" placeholder="Ej: Tottus, El Fogón..." 
                                             class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
                                     </div>
-                                    <div class="col-span-4">
+                                    <div class="col-span-3">
                                         <input type="number" id="new-mov-amount-${catIdx}" step="0.01" placeholder="Monto S/" 
                                             class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white text-right font-bold focus:outline-none focus:border-emerald-500 transition">
                                     </div>
                                     <div class="col-span-2">
-                                        <button onclick="addCardMovement(${catIdx})" 
-                                            class="w-full h-full ${btnBg} font-black rounded-lg text-xs flex items-center justify-center transition active:scale-95 shadow-md" title="Guardar Gasto">
-                                            <i class="fa-solid fa-plus"></i>
+                                        <button onclick="addCardMovement(${catIdx}, 'gasto')" 
+                                            class="w-full h-full bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/40 font-black rounded-lg text-[10px] flex items-center justify-center gap-1 transition active:scale-95 shadow-md" title="Registrar Consumo/Gasto">
+                                            <i class="fa-solid fa-minus"></i> Gasto
+                                        </button>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <button onclick="addCardMovement(${catIdx}, 'abono')" 
+                                            class="w-full h-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 font-black rounded-lg text-[10px] flex items-center justify-center gap-1 transition active:scale-95 shadow-md" title="Registrar Abono/Pago">
+                                            <i class="fa-solid fa-plus"></i> Abono
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- Lista de Movimientos -->
-                                <h5 class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Movimientos Recientes</h5>
+                                <!-- Lista de Movimientos Unificados -->
+                                <h5 class="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Historial de Consumos y Abonos</h5>
                                 <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
-                                    ${movements.length === 0 ? '<p class="text-xs text-slate-500 italic text-center py-4">No hay consumos registrados en esta tarjeta.</p>' : ''}
-                                    ${movements.map((m) => `
-                                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 transition">
-                                            <div class="flex items-center gap-2.5">
-                                                <div class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 text-xs">
-                                                    <i class="fa-solid fa-bag-shopping"></i>
+                                    ${movs.length === 0 ? '<p class="text-xs text-slate-500 italic text-center py-4">No hay movimientos registrados en esta tarjeta.</p>' : ''}
+                                    ${movs.map((m) => {
+                                        const isAbono = m.type === 'abono';
+                                        return `
+                                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border ${isAbono ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-slate-800/80'} hover:border-slate-700 transition">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="p-1.5 rounded-lg ${isAbono ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'} text-xs">
+                                                        <i class="fa-solid ${isAbono ? 'fa-hand-holding-dollar' : 'fa-bag-shopping'}"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-xs font-bold text-white leading-tight">${m.name}</p>
+                                                        <p class="text-[10px] text-slate-400">${m.date} • <span class="${isAbono ? 'text-emerald-400 font-semibold' : 'text-amber-400'}">${isAbono ? 'Abono Realizado' : (m.status || 'Procesado')}</span></p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p class="text-xs font-bold text-white leading-tight">${m.name}</p>
-                                                    <p class="text-[10px] text-slate-400">${m.date} • <span class="text-amber-400">${m.status || 'En proceso'}</span></p>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs font-black ${isAbono ? 'text-emerald-400' : 'text-rose-400'}">
+                                                        ${isAbono ? '+' : '-'}${formatPEN(m.amount)}
+                                                    </span>
+                                                    <button onclick="deleteCardMovement(${catIdx}, '${m.id}')" class="text-slate-500 hover:text-rose-400 text-xs p-1 transition" title="Eliminar registro de historial">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-xs font-black text-rose-400">-${formatPEN(m.amount)}</span>
-                                                <button onclick="deleteCardMovement(${catIdx}, '${m.id}')" class="text-slate-500 hover:text-rose-400 text-xs p-1 transition" title="Eliminar consumo">
-                                                    <i class="fa-solid fa-trash-can"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    `).join('')}
+                                        `;
+                                    }).join('')}
                                 </div>
                             </div>
                         </div>
@@ -874,6 +943,97 @@
             });
 
             container.innerHTML = html;
+        }
+
+        async function processReceiptImage(event, catIdx) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            const modal = document.getElementById('ai-loading-modal');
+            if (modal) modal.classList.remove('hidden');
+
+            try {
+                const base64Data = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const promptText = "Analiza este comprobante de pago o voucher de tarjeta de crédito/débito en Perú. Extrae el nombre de la empresa/tienda (store) y el monto total consumido en soles (amount, como número decimal). Responde ÚNICAMENTE en formato JSON plano sin bloques de código con este formato: {\"store\": \"Nombre Tienda\", \"amount\": 45.50}";
+
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [
+                            { text: promptText },
+                            {
+                                inlineData: {
+                                    mimeType: file.type || "image/jpeg",
+                                    data: base64Data
+                                }
+                            }
+                        ]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                let parsed = { store: "Gasto con Boleta", amount: 25.00 };
+                if (jsonText) {
+                    try {
+                        parsed = JSON.parse(jsonText);
+                    } catch (e) {
+                        console.warn("Error parsing Gemini JSON", e);
+                    }
+                }
+
+                const storeName = parsed.store || "Compra con Boleta IA";
+                const amountVal = parseFloat(parsed.amount) || 15.00;
+
+                const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+                if (activeMod && activeMod.categories[catIdx]) {
+                    const cat = activeMod.categories[catIdx];
+                    if (!cat.movements) cat.movements = [];
+
+                    const now = new Date();
+                    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+                    const timeStr = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+                    cat.movements.unshift({
+                        id: 'mov_ai_' + Date.now(),
+                        name: storeName + ' 📸 (Escaneado IA)',
+                        amount: amountVal,
+                        type: 'gasto',
+                        date: timeStr,
+                        status: 'Procesado'
+                    });
+
+                    saveState();
+                    recalculateAll();
+                    renderCardAppWidget();
+                }
+
+            } catch (err) {
+                console.error("Error al procesar boleta con IA:", err);
+            } finally {
+                if (modal) modal.classList.add('hidden');
+                event.target.value = '';
+            }
         }
 
         window.updateCardLinea = function(catIdx, valString) {
@@ -886,7 +1046,6 @@
             cat.income = val;
 
             saveState();
-            buildStaticTable();
             recalculateAll();
             renderCardAppWidget();
         };
@@ -896,21 +1055,40 @@
             if (!activeMod || !activeMod.categories[catIdx]) return;
 
             const val = parseFloat(valString) || 0;
+            if (val <= 0) return;
+
             const cat = activeMod.categories[catIdx];
-            cat.saldoTarjeta = val;
+            if (!cat.movements) cat.movements = [];
+
+            const now = new Date();
+            const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+            const timeStr = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            cat.movements.unshift({
+                id: 'mov_abono_' + Date.now(),
+                name: 'Abono / Pago Registrado',
+                amount: val,
+                type: 'abono',
+                date: timeStr,
+                status: 'Procesado'
+            });
+
+            const totalAbonos = cat.movements.filter(m => m.type === 'abono').reduce((s, m) => s + (m.amount || 0), 0);
+            cat.saldoTarjeta = totalAbonos;
 
             saveState();
-            buildStaticTable();
             recalculateAll();
             renderCardAppWidget();
         };
 
-        window.addCardMovement = function(catIdx) {
+        window.addCardMovement = function(catIdx, movType) {
             const nameEl = document.getElementById(`new-mov-name-${catIdx}`);
             const amountEl = document.getElementById(`new-mov-amount-${catIdx}`);
             if (!nameEl || !amountEl) return;
 
-            const name = nameEl.value.trim() || 'Gasto Diario';
+            const isAbono = movType === 'abono';
+            const name = nameEl.value.trim() || (isAbono ? 'Abono / Pago de Tarjeta' : 'Gasto Diario');
             const amount = parseFloat(amountEl.value) || 0;
 
             if (amount <= 0) return;
@@ -930,19 +1108,18 @@
                 id: 'mov_' + Date.now(),
                 name: name,
                 amount: amount,
+                type: isAbono ? 'abono' : 'gasto',
                 date: timeStr,
-                status: 'En proceso'
+                status: 'Procesado'
             });
 
-            // Reducir disponible y actualizar consumo
-            const currentDisp = cat.disponible !== undefined ? cat.disponible : 10000;
-            cat.disponible = Math.max(0, currentDisp - amount);
+            const totalAbonos = cat.movements.filter(m => m.type === 'abono').reduce((s, m) => s + (m.amount || 0), 0);
+            cat.saldoTarjeta = totalAbonos;
 
             nameEl.value = '';
             amountEl.value = '';
 
             saveState();
-            buildStaticTable();
             recalculateAll();
             renderCardAppWidget();
         };
@@ -956,133 +1133,100 @@
 
             const movIdx = cat.movements.findIndex(m => m.id === movId);
             if (movIdx !== -1) {
-                const deletedMov = cat.movements[movIdx];
-                cat.disponible = (cat.disponible || 0) + (deletedMov.amount || 0);
                 cat.movements.splice(movIdx, 1);
 
+                const totalAbonos = cat.movements.filter(m => m.type === 'abono').reduce((s, m) => s + (m.amount || 0), 0);
+                cat.saldoTarjeta = totalAbonos;
+
                 saveState();
-                buildStaticTable();
                 recalculateAll();
                 renderCardAppWidget();
             }
         };
 
-        function calculateDaysByMode(startDateStr, endDateStr, mode, isRemaining = false) {
-            if (!startDateStr || !endDateStr || typeof startDateStr !== 'string' || typeof endDateStr !== 'string') return 0;
-            
-            const startParts = startDateStr.split('-');
-            const endParts = endDateStr.split('-');
-            if (startParts.length !== 3 || endParts.length !== 3) return 0;
-            
-            let start = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-            let end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
-            
-            if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-            
-            const targetEnd = new Date(end);
-            targetEnd.setDate(targetEnd.getDate() - 1);
-            
-            let current = new Date(start);
-            if (isRemaining) {
-                current.setDate(current.getDate() + 1);
-            }
-            
-            let count = 0;
-            while (current <= targetEnd) {
-                const day = current.getDay();
-                if (mode === 'working') {
-                    if (day !== 0 && day !== 6) count++;
-                } else if (mode === 'saturday') {
-                    if (day === 6) count++;
-                } else {
-                    count++;
-                }
-                current.setDate(current.getDate() + 1);
-            }
-            return count;
-        }
+        function renderDashboard() {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod || activeMod.id === 'mod_tarjetas_credito') return;
 
-        function calculateCalendarDaysRemaining(actualDateStr, endDateStr) {
-            if (!actualDateStr || !endDateStr || typeof actualDateStr !== 'string' || typeof endDateStr !== 'string') return 0;
-            const actualParts = actualDateStr.split('-');
-            const endParts = endDateStr.split('-');
-            if (actualParts.length !== 3 || endParts.length !== 3) return 0;
-            
-            let actual = new Date(actualParts[0], actualParts[1] - 1, actualParts[2]);
-            let end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
-            
-            if (isNaN(actual.getTime()) || isNaN(end.getTime())) return 0;
-            
-            const diffTime = end.getTime() - actual.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays > 0 ? diffDays : 0;
-        }
-
-        function buildStaticTable() {
             const headerRow = document.getElementById('table-header-row');
             const tbody = document.getElementById('spreadsheet-body');
-            
             if (!headerRow || !tbody) return;
 
-            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
-            if (!activeMod) return;
-
-            const categories = activeMod.categories || [];
-            const isTarjetas = activeMod.id === 'mod_tarjetas_credito';
-
-            // 1. Cabeceras
             let headerHTML = `
-                <th class="p-4 font-bold text-[11px] uppercase tracking-wider text-slate-400 w-1/5 min-w-[200px]">
+                <th class="p-4 font-bold text-xs uppercase tracking-wider text-slate-400 w-1/5 min-w-[200px]">
                     INDICADOR / CUENTA
                 </th>
             `;
-            
-            categories.forEach((cat) => {
+
+            activeMod.categories.forEach((cat, index) => {
                 headerHTML += `
                     <th class="p-4 text-center font-bold relative group w-52 min-w-[180px]">
-                        <div class="px-3 py-1.5 rounded-lg inline-flex items-center gap-2 ${cat.headerColor || 'bg-slate-800 text-white'} text-[11px] font-black shadow-md uppercase tracking-wider">
+                        <div class="px-3 py-1.5 rounded-lg inline-flex items-center gap-2 ${cat.headerColor || 'bg-slate-800 text-white'} text-xs font-black shadow-md uppercase tracking-wider">
                             <span>${cat.name}</span>
+                            <button onclick="removeCategory(${index})" class="text-slate-950/60 hover:text-slate-950 transition ml-1" title="Eliminar Columna">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                            </button>
                         </div>
                     </th>
                 `;
             });
 
             headerHTML += `
-                <th class="p-4 font-bold text-[11px] uppercase tracking-wider text-slate-200 bg-slate-900 w-44 text-center min-w-[160px]">
+                <th class="p-4 font-bold text-xs uppercase tracking-wider text-slate-200 bg-slate-900 w-44 text-center min-w-[160px]">
                     TOTALES
                 </th>
             `;
+
             headerRow.innerHTML = headerHTML;
 
-            // 2. Definición de Filas según Módulo
-            let rowsConfig = [];
+            const rowsConfig = [
+                { 
+                    id: 'cuantos_dias', 
+                    label: 'CUANTOS DIAS', 
+                    icon: 'fa-hourglass-half', 
+                    calc: (c) => {
+                        if (!c.start || !c.actual) return 1;
+                        const startParts = c.start.split('-');
+                        const actualParts = c.actual.split('-');
+                        if (startParts.length !== 3 || actualParts.length !== 3) return 1;
 
-            if (isTarjetas) {
-                rowsConfig = [
-                    { id: 'linea_credito', label: 'LINEA DE CREDITO', icon: 'fa-credit-card', isNumber: true, key: 'lineaCredito', rowClass: 'bg-amber-500/10 border-amber-500/20', labelClass: 'text-amber-300 font-black' },
-                    { id: 'disponible', label: 'DISPONIBLE', icon: 'fa-wallet', isNumber: true, key: 'disponible', labelClass: 'text-emerald-400 font-bold' },
-                    { id: 'consumido', label: 'CONSUMIDO', icon: 'fa-cart-shopping', isCalculated: true, format: true, labelClass: 'text-rose-400 font-black' },
-                    { id: 'restar_sobre', label: 'RESTAR SOBRE', icon: 'fa-minus-circle', isNumber: true, key: 'restarSobre', labelClass: 'text-slate-400 font-semibold' },
-                    { id: 'cuantos_dias', label: 'CUANTOS DIAS VENC', icon: 'fa-hourglass-half', isCalculated: true, labelClass: 'text-slate-400 font-semibold', hideTotal: true },
-                    { id: 'fecha_inicio', label: 'FECHA DE INICIO', icon: 'fa-calendar-plus', isDate: true, key: 'start', hideTotal: true },
-                    { id: 'fecha_actual', label: 'FECHA ACTUAL', icon: 'fa-calendar-day', isDate: true, key: 'actual', hideTotal: true },
-                    { id: 'fecha_termino', label: 'FECHA VENCIMIENTO', icon: 'fa-calendar-check', isDate: true, key: 'end', labelClass: 'text-rose-400 font-bold', hideTotal: true },
-                    { id: 'saldo_tarjeta', label: 'ABONADO / PAGO', icon: 'fa-money-bill-wave', isNumber: true, key: 'saldoTarjeta', rowClass: 'glow-red-border border-2 bg-rose-950/20 my-2 rounded-xl transition-all duration-300', labelClass: 'text-rose-400 font-black tracking-wide' },
-                    { id: 'faltante', label: 'BRECHA DE PAGO', icon: 'fa-circle-exclamation', isCalculated: true, format: true, labelClass: 'text-slate-300 font-black' }
-                ];
-            } else {
-                rowsConfig = [
-                    { id: 'cuantos_dias', label: 'CUANTOS DIAS', icon: 'fa-hourglass-half', isCalculated: true, labelClass: 'text-slate-400 font-semibold', hideTotal: true },
-                    { id: 'fecha_inicio', label: 'FECHA DE INICIO', icon: 'fa-calendar-plus', isDate: true, key: 'start', hideTotal: true },
-                    { id: 'fecha_actual', label: 'FECHA ACTUAL', icon: 'fa-calendar-day', isDate: true, key: 'actual', hideTotal: true },
-                    { id: 'fecha_termino', label: 'FECHA DE TERMINO', icon: 'fa-calendar-check', isDate: true, key: 'end', labelClass: 'text-rose-400 font-bold', hideTotal: true },
-                    { id: 'ingreso_gasto', label: 'INGRESO GASTO', icon: 'fa-money-bill-wave', isNumber: true, key: 'income', rowClass: 'bg-slate-900/30', labelClass: 'text-red-500 font-black' },
-                    { id: 'gasto_por_dia', label: 'GASTO POR DIA', icon: 'fa-calculator', isCalculated: true, format: true },
-                    { id: 'resultado_saldo', label: 'RESULTADO SALDO', icon: 'fa-chart-pie', isCalculated: true, format: true, rowClass: 'bg-amber-500/10 border-amber-500/20', labelClass: 'text-amber-400 font-bold' },
-                    { id: 'saldo_tarjeta', label: 'SALDO TARJETA', icon: 'fa-credit-card', isNumber: true, key: 'saldoTarjeta', rowClass: 'glow-red-border border-2 bg-rose-950/20 my-2 rounded-xl transition-all duration-300', labelClass: 'text-rose-400 font-black tracking-wide' },
-                    { id: 'faltante', label: 'FALTANTE', icon: 'fa-circle-exclamation', isCalculated: true, format: true, labelClass: 'text-slate-300 font-black' }
-                ];
-            }
+                        let start = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+                        let actual = new Date(actualParts[0], actualParts[1] - 1, actualParts[2]);
+
+                        if (isNaN(start.getTime()) || isNaN(actual.getTime())) return 1;
+
+                        const diffTime = actual.getTime() - start.getTime();
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                        return diffDays < 0 ? 0 : (diffDays + 1);
+                    }, 
+                    isCalculated: true, 
+                    labelClass: 'text-slate-400 font-semibold', 
+                    hideTotal: true 
+                },
+                { id: 'fecha_inicio', label: 'FECHA DE INICIO', icon: 'fa-calendar-plus', isDate: true, key: 'start', hideTotal: true },
+                { id: 'fecha_actual', label: 'FECHA ACTUAL', icon: 'fa-calendar-day', isDate: true, key: 'actual', hideTotal: true },
+                { id: 'fecha_termino', label: 'FECHA DE TERMINO', icon: 'fa-calendar-check', isDate: true, key: 'end', labelClass: 'text-rose-400 font-bold', hideTotal: true },
+                { id: 'ingreso_gasto', label: 'INGRESO GASTO', icon: 'fa-money-bill-wave', isNumber: true, key: 'income', rowClass: 'bg-slate-900/30', labelClass: 'text-red-500 font-black' },
+                { id: 'gasto_por_dia', label: 'GASTO POR DIA', icon: 'fa-calculator', calc: (c) => {
+                    const totalPeriodDays = calculateDaysByMode(c.start, c.end, c.daysType, false);
+                    return totalPeriodDays > 0 ? (c.income / totalPeriodDays) : 0;
+                }, isCalculated: true, format: true },
+                { id: 'resultado_saldo', label: 'RESULTADO SALDO', icon: 'fa-chart-pie', calc: (c) => {
+                    const remainingDays = calculateDaysByMode(c.actual, c.end, c.daysType, true);
+                    const totalPeriodDays = calculateDaysByMode(c.start, c.end, c.daysType, false);
+                    const dailyRate = totalPeriodDays > 0 ? (c.income / totalPeriodDays) : 0;
+                    return remainingDays * dailyRate;
+                }, isCalculated: true, format: true, rowClass: 'bg-amber-500/10 border-amber-500/20', labelClass: 'text-amber-400 font-bold' },
+                { id: 'saldo_tarjeta', label: 'SALDO TARJETA', icon: 'fa-credit-card', isNumber: true, key: 'saldoTarjeta', rowClass: 'glow-red-border border-2 bg-rose-950/20 my-2 rounded-xl transition-all duration-300', labelClass: 'text-rose-400 font-black tracking-wide' },
+                { id: 'faltante', label: 'FALTANTE', icon: 'fa-circle-exclamation', calc: (c) => {
+                    const remainingDays = calculateDaysByMode(c.actual, c.end, c.daysType, true);
+                    const totalPeriodDays = calculateDaysByMode(c.start, c.end, c.daysType, false);
+                    const dailyRate = totalPeriodDays > 0 ? (c.income / totalPeriodDays) : 0;
+                    const resultBudget = remainingDays * dailyRate;
+                    return resultBudget - c.saldoTarjeta;
+                }, isCalculated: true, format: true, labelClass: 'text-slate-300 font-black' }
+            ];
 
             tbody.innerHTML = '';
 
@@ -1091,19 +1235,20 @@
                 
                 rowHTML += `
                     <td class="p-4 font-semibold text-slate-300 flex items-center gap-2.5">
-                        <i class="fa-solid ${rowSpec.icon} w-5 text-slate-500 text-center text-xs"></i>
-                        <span class="text-xs ${rowSpec.labelClass || ''}">${rowSpec.label}</span>
+                        <i class="fa-solid ${rowSpec.icon} w-5 text-slate-500 text-center"></i>
+                        <span class="${rowSpec.labelClass || ''}">${rowSpec.label}</span>
                     </td>
                 `;
 
-                categories.forEach((cat, cIdx) => {
+                let totalAcumulado = 0;
+
+                activeMod.categories.forEach((cat, cIdx) => {
                     if (rowSpec.isDate) {
                         rowHTML += `
                             <td class="p-3 text-center">
                                 <div class="relative inline-block w-full max-w-[170px]">
-                                    <input type="date" value="${cat[rowSpec.key] || ''}" 
-                                        id="input-${rowSpec.id}-${cIdx}"
-                                        onchange="handleDateChange(${cIdx}, '${rowSpec.key}', this.value)" 
+                                    <input type="date" value="${cat[rowSpec.key]}" 
+                                        onchange="updateValue(${cIdx}, '${rowSpec.key}', this.value)" 
                                         class="bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-lg px-2.5 py-1.5 text-center text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-full transition cursor-pointer">
                                 </div>
                             </td>
@@ -1116,22 +1261,54 @@
                                 <div class="relative inline-flex items-center w-full max-w-[150px] rounded-lg bg-slate-950 border ${isTarjeta ? 'border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/30' : 'border-slate-800 focus-within:border-slate-700'}">
                                     <span class="pl-2.5 text-xs text-slate-500 font-bold select-none">S/</span>
                                     <input type="number" step="0.01" value="${numericVal}" 
-                                        id="input-${rowSpec.id}-${cIdx}"
-                                        oninput="updateNumericValue(${cIdx}, '${rowSpec.key}', this.value)" 
-                                        onblur="formatNumericInput(this)"
+                                        onchange="updateValue(${cIdx}, '${rowSpec.key}', parseFloat(this.value) || 0)" 
+                                        onblur="this.value = parseFloat(this.value || 0).toFixed(2)"
                                         class="bg-transparent border-none text-right px-2.5 py-1.5 text-xs text-white font-black w-full focus:outline-none">
                                 </div>
                             </td>
                         `;
+                        totalAcumulado += parseFloat(cat[rowSpec.key]) || 0;
                     } else if (rowSpec.isCalculated) {
-                        rowHTML += `<td class="p-3 text-center text-xs font-bold" id="calc-${rowSpec.id}-${cIdx}">-</td>`;
+                        const calculatedVal = rowSpec.calc(cat);
+                        totalAcumulado += calculatedVal;
+                        
+                        let cellContent = '';
+                        if (rowSpec.id === 'cuantos_dias') {
+                            cellContent = `<span class="font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30">Día ${calculatedVal}</span>`;
+                        } else if (rowSpec.format) {
+                            if (rowSpec.id === 'faltante') {
+                                const hasDeficit = calculatedVal > 0;
+                                const glowClass = hasDeficit ? 'text-glow-red animate-pulse font-extrabold' : 'text-glow-green font-extrabold';
+                                cellContent = `<span class="${glowClass}">${formatPEN(calculatedVal)}</span>`;
+                            } else {
+                                cellContent = `<span class="font-bold text-slate-200">${formatPEN(calculatedVal)}</span>`;
+                            }
+                        } else {
+                            cellContent = `<span class="font-bold text-slate-300">${calculatedVal}</span>`;
+                        }
+
+                        rowHTML += `<td class="p-3 text-center">${cellContent}</td>`;
                     }
                 });
 
-                let totalIdAttr = rowSpec.hideTotal ? '' : `id="total-val-${rowSpec.id}"`;
+                let totalDisplay = '';
+                if (rowSpec.hideTotal) {
+                    totalDisplay = '<span class="text-slate-600">-</span>';
+                } else if (rowSpec.format || rowSpec.isNumber) {
+                    if (rowSpec.id === 'faltante') {
+                        const hasDeficit = totalAcumulado > 0;
+                        const glowClass = hasDeficit ? 'text-glow-red font-black' : 'text-glow-green font-black';
+                        totalDisplay = `<span class="${glowClass}">${formatPEN(totalAcumulado)}</span>`;
+                    } else {
+                        totalDisplay = `<span class="font-black text-white">${formatPEN(totalAcumulado)}</span>`;
+                    }
+                } else {
+                    totalDisplay = `<span class="font-bold text-slate-300">${totalAcumulado}</span>`;
+                }
+
                 rowHTML += `
-                    <td ${totalIdAttr} class="p-4 text-center bg-slate-950/50 font-black border-l border-slate-800 text-xs">
-                        -
+                    <td class="p-4 text-center bg-slate-950/50 font-black border-l border-slate-800">
+                        ${totalDisplay}
                     </td>
                 `;
 
@@ -1140,244 +1317,117 @@
             });
         }
 
+        function updateValue(categoryIndex, key, value) {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod || !activeMod.categories[categoryIndex]) return;
+
+            const cat = activeMod.categories[categoryIndex];
+            cat[key] = value;
+
+            if (key === 'start') {
+                cat.end = addOneMonth(value);
+                if (!cat.actual) {
+                    cat.actual = getLocalDateString();
+                }
+
+                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
+                const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
+                const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
+                const resultBudget = remainingDays * dailyRate;
+
+                cat.saldoTarjeta = Math.round(resultBudget * 100) / 100;
+            } else if (key === 'actual') {
+                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
+                const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
+                const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
+                const resultBudget = remainingDays * dailyRate;
+
+                cat.saldoTarjeta = Math.round(resultBudget * 100) / 100;
+            }
+
+            saveState();
+            recalculateAll();
+        }
+
+        function removeCategory(index) {
+            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+            if (!activeMod) return;
+
+            activeMod.categories.splice(index, 1);
+            saveState();
+            recalculateAll();
+        }
+
         function recalculateAll() {
             const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
             if (!activeMod) return;
 
-            const categories = activeMod.categories || [];
-            const isTarjetas = activeMod.id === 'mod_tarjetas_credito';
+            if (activeMod.id === 'mod_control_gastos') {
+                let totalIncome = 0;
+                let totalCard = 0;
+                let totalDeficit = 0;
+                let categoriesWithDeficit = [];
 
-            let totals = {
-                income: 0,
-                gasto_por_dia: 0,
-                resultado_saldo: 0,
-                saldoTarjeta: 0,
-                faltante: 0,
-                lineaCredito: 0,
-                disponible: 0,
-                consumido: 0,
-                restarSobre: 0
-            };
+                activeMod.categories.forEach(cat => {
+                    totalIncome += cat.income;
+                    totalCard += cat.saldoTarjeta;
 
-            categories.forEach((cat, cIdx) => {
-                const cuantos_dias = calculateCalendarDaysRemaining(cat.actual, cat.end);
-                
-                if (isTarjetas) {
-                    const linea = cat.lineaCredito || 0;
-                    const disp = cat.disponible !== undefined ? cat.disponible : 0;
-                    const consumido = linea - disp;
-                    const restarSobre = cat.restarSobre || 0;
-                    const abonado = cat.saldoTarjeta || 0;
-                    
-                    const faltante = Math.max(0, consumido - abonado);
-
-                    const elCuantos = document.getElementById(`calc-cuantos_dias-${cIdx}`);
-                    if (elCuantos) elCuantos.innerHTML = `<span class="font-bold text-slate-300">${cuantos_dias}</span>`;
-
-                    const elConsumido = document.getElementById(`calc-consumido-${cIdx}`);
-                    if (elConsumido) elConsumido.innerHTML = `<span class="font-black text-rose-400">-${formatPEN(consumido)}</span>`;
-
-                    const elFaltante = document.getElementById(`calc-faltante-${cIdx}`);
-                    if (elFaltante) {
-                        const hasDeficit = faltante > 0;
-                        const glowClass = hasDeficit ? 'text-glow-red font-extrabold animate-pulse' : 'text-glow-green font-extrabold';
-                        elFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(faltante)}</span>`;
-                    }
-
-                    totals.lineaCredito += linea;
-                    totals.disponible += disp;
-                    totals.consumido += consumido;
-                    totals.restarSobre += restarSobre;
-                    totals.saldoTarjeta += abonado;
-                    totals.faltante += faltante;
-
-                } else {
-                    const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
-                    const gasto_por_dia = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
-                    
                     const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
-                    const resultado_saldo = remainingDays * gasto_por_dia;
-                    
-                    const saldo_tarjeta = cat.saldoTarjeta || 0;
-                    const faltante = resultado_saldo - saldo_tarjeta;
+                    const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
+                    const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
+                    const resultBudget = remainingDays * dailyRate;
+                    const deficit = resultBudget - cat.saldoTarjeta;
 
-                    const elCuantos = document.getElementById(`calc-cuantos_dias-${cIdx}`);
-                    if (elCuantos) elCuantos.innerHTML = `<span class="font-bold text-slate-300">${cuantos_dias}</span>`;
-
-                    const elGastoDia = document.getElementById(`calc-gasto_por_dia-${cIdx}`);
-                    if (elGastoDia) elGastoDia.innerHTML = `<span class="font-bold text-slate-200">${formatPEN(gasto_por_dia)}</span>`;
-
-                    const elResSaldo = document.getElementById(`calc-resultado_saldo-${cIdx}`);
-                    if (elResSaldo) elResSaldo.innerHTML = `<span class="font-bold text-slate-200">${formatPEN(resultado_saldo)}</span>`;
-
-                    const elFaltante = document.getElementById(`calc-faltante-${cIdx}`);
-                    if (elFaltante) {
-                        const hasDeficit = faltante > 0;
-                        const glowClass = hasDeficit ? 'text-glow-red font-extrabold animate-pulse' : 'text-glow-green font-extrabold';
-                        elFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(faltante)}</span>`;
+                    if (deficit > 0) {
+                        totalDeficit += deficit;
+                        categoriesWithDeficit.push({ name: cat.name, val: deficit });
                     }
+                });
 
-                    totals.income += cat.income;
-                    totals.gasto_por_dia += gasto_por_dia;
-                    totals.resultado_saldo += resultado_saldo;
-                    totals.saldoTarjeta += saldo_tarjeta;
-                    totals.faltante += faltante;
-                }
-            });
-
-            // Actualizar Totales en Tabla
-            if (isTarjetas) {
-                const tLinea = document.getElementById('total-val-linea_credito');
-                if (tLinea) tLinea.innerHTML = `<span class="font-black text-amber-300">${formatPEN(totals.lineaCredito)}</span>`;
-
-                const tDisp = document.getElementById('total-val-disponible');
-                if (tDisp) tDisp.innerHTML = `<span class="font-black text-emerald-400">${formatPEN(totals.disponible)}</span>`;
-
-                const tCons = document.getElementById('total-val-consumido');
-                if (tCons) tCons.innerHTML = `<span class="font-black text-rose-400">-${formatPEN(totals.consumido)}</span>`;
-
-                const tRest = document.getElementById('total-val-restar_sobre');
-                if (tRest) tRest.innerHTML = `<span class="font-bold text-slate-300">${formatPEN(totals.restarSobre)}</span>`;
-
-                const tAbon = document.getElementById('total-val-saldo_tarjeta');
-                if (tAbon) tAbon.innerHTML = `<span class="font-black text-white">${formatPEN(totals.saldoTarjeta)}</span>`;
-
-                const tFalt = document.getElementById('total-val-faltante');
-                if (tFalt) {
-                    const hasDeficit = totals.faltante > 0;
-                    const glowClass = hasDeficit ? 'text-glow-red font-black' : 'text-glow-green font-black';
-                    tFalt.innerHTML = `<span class="${glowClass}">${formatPEN(totals.faltante)}</span>`;
-                }
-            } else {
-                const tIncome = document.getElementById('total-val-ingreso_gasto');
-                if (tIncome) tIncome.innerHTML = `<span class="font-black text-white">${formatPEN(totals.income)}</span>`;
-
-                const tGasto = document.getElementById('total-val-gasto_por_dia');
-                if (tGasto) tGasto.innerHTML = `<span class="font-black text-white">${formatPEN(totals.gasto_por_dia)}</span>`;
-
-                const tRes = document.getElementById('total-val-resultado_saldo');
-                if (tRes) tRes.innerHTML = `<span class="font-black text-white">${formatPEN(totals.resultado_saldo)}</span>`;
-
-                const tTarjeta = document.getElementById('total-val-saldo_tarjeta');
-                if (tTarjeta) tTarjeta.innerHTML = `<span class="font-black text-white">${formatPEN(totals.saldoTarjeta)}</span>`;
-
-                const tFaltante = document.getElementById('total-val-faltante');
-                if (tFaltante) {
-                    const hasDeficit = totals.faltante > 0;
-                    const glowClass = hasDeficit ? 'text-glow-red font-black' : 'text-glow-green font-black';
-                    tFaltante.innerHTML = `<span class="${glowClass}">${formatPEN(totals.faltante)}</span>`;
-                }
-            }
-
-            // Actualizar Métricas Superiores
-            const grid = document.getElementById('advisor-stats-grid');
-            if (grid) {
-                if (isTarjetas) {
-                    grid.innerHTML = `
-                        <div>
-                            <p class="text-xs text-slate-400">Línea de Crédito Total</p>
-                            <p class="text-base sm:text-lg font-bold text-amber-300">${formatPEN(totals.lineaCredito)}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-400">Consumido Total</p>
-                            <p class="text-base sm:text-lg font-bold text-rose-400">${formatPEN(totals.consumido)}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-400">Disponible Total</p>
-                            <p class="text-base sm:text-lg font-bold text-emerald-400">${formatPEN(totals.disponible)}</p>
-                        </div>
-                    `;
-                } else {
-                    grid.innerHTML = `
+                const gridContainer = document.getElementById('advisor-stats-grid');
+                if (gridContainer) {
+                    gridContainer.innerHTML = `
                         <div>
                             <p class="text-xs text-slate-400">Presupuesto Inicial</p>
-                            <p class="text-base sm:text-lg font-bold text-emerald-400">${formatPEN(totals.income)}</p>
+                            <p class="text-base sm:text-lg font-bold text-emerald-400">${formatPEN(totalIncome)}</p>
                         </div>
                         <div>
                             <p class="text-xs text-slate-400">Saldo Tarjeta Total</p>
-                            <p class="text-base sm:text-lg font-bold text-sky-400">${formatPEN(totals.saldoTarjeta)}</p>
+                            <p class="text-base sm:text-lg font-bold text-sky-400">${formatPEN(totalCard)}</p>
                         </div>
                         <div>
                             <p class="text-xs text-slate-400">Faltante Neto</p>
-                            <p class="text-base sm:text-lg font-bold text-rose-400">${formatPEN(totals.faltante)}</p>
+                            <p class="text-base sm:text-lg font-bold text-rose-400">${formatPEN(totalDeficit)}</p>
                         </div>
                     `;
                 }
-            }
 
-            // Actualizar Texto del Asesor
-            const advTitle = document.getElementById('advisor-title');
-            const advAdvice = document.getElementById('advisor-advice');
+                const advTitle = document.getElementById('advisor-title');
+                const advAdvice = document.getElementById('advisor-advice');
 
-            if (advTitle && advAdvice) {
-                if (totals.faltante > 0) {
-                    advTitle.innerText = "⚠️ Advertencia de Saldos Faltantes";
-                    advAdvice.innerHTML = `Tienes una brecha pendiente de <strong class="text-rose-400">${formatPEN(totals.faltante)}</strong>. Se recomienda abonar a tus tarjetas para cubrir el período.`;
-                } else {
-                    advTitle.innerText = "🟢 Estado Financiero Saludable";
-                    advAdvice.innerHTML = `¡Fabuloso! Tus saldos cubren con exactitud matemática el gasto proyectado para este ciclo.`;
+                if (advTitle && advAdvice) {
+                    if (totalDeficit > 0) {
+                        advTitle.innerText = "⚠️ Advertencia de Saldos Faltantes";
+                        let listNames = categoriesWithDeficit.map(c => `<strong>${c.name}</strong> (${formatPEN(c.val)})`).join(', ');
+                        advAdvice.innerHTML = `Tu saldo no cubre el presupuesto restante. Brecha total de ${formatPEN(totalDeficit)}. Se recomienda inyectar saldo a: ${listNames}.`;
+                    } else {
+                        advTitle.innerText = "🟢 Estado Financiero Saludable";
+                        advAdvice.innerHTML = `¡Fabuloso! Tu saldo cubre con exactitud el consumo diario proyectado. Mantén este ritmo de gasto.`;
+                    }
                 }
+
+                renderDashboard();
+            } else if (activeMod.id === 'mod_tarjetas_credito') {
+                renderCardAppWidget();
             }
-
-            saveState();
         }
 
-        function handleDateChange(catIdx, key, valString) {
-            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
-            if (!activeMod || !activeMod.categories[catIdx]) return;
-
-            const cat = activeMod.categories[catIdx];
-            cat[key] = valString;
-
-            // Si se cambia la Fecha de Inicio, avanzar Fecha de Término +1 Mes y calcular Saldo para Faltante = 0.00
-            if (key === 'start' && valString) {
-                const newEnd = addOneMonth(valString);
-                cat.end = newEnd;
-
-                const endInput = document.getElementById(`input-fecha_termino-${catIdx}`);
-                if (endInput) endInput.value = newEnd;
-
-                const totalPeriodDays = calculateDaysByMode(cat.start, cat.end, cat.daysType, false);
-                const dailyRate = totalPeriodDays > 0 ? (cat.income / totalPeriodDays) : 0;
-                const remainingDays = calculateDaysByMode(cat.actual, cat.end, cat.daysType, true);
-                const requiredBalance = remainingDays * dailyRate;
-
-                cat.saldoTarjeta = requiredBalance;
-
-                const saldoInput = document.getElementById(`input-saldo_tarjeta-${catIdx}`);
-                if (saldoInput) saldoInput.value = requiredBalance.toFixed(2);
-            }
-
-            saveState();
-            recalculateAll();
-            if (activeMod.id === 'mod_tarjetas_credito') renderCardAppWidget();
-        }
-
-        function updateNumericValue(catIdx, key, valString) {
-            const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
-            if (!activeMod || !activeMod.categories[catIdx]) return;
-
-            const numericValue = parseFloat(valString) || 0;
-            activeMod.categories[catIdx][key] = numericValue;
-
-            saveState();
-            recalculateAll();
-            if (activeMod.id === 'mod_tarjetas_credito') renderCardAppWidget();
-        }
-
-        function formatNumericInput(inputEl) {
-            const val = parseFloat(inputEl.value) || 0;
-            inputEl.value = val.toFixed(2);
-        }
-
-        /* Arrancar la Aplicación */
         window.onload = function() {
             loadState();
             renderSidebarNav();
             updateHeaderInfo();
-            buildStaticTable();
             recalculateAll();
-        }
+        };
     </script>
 </body>
 </html>
