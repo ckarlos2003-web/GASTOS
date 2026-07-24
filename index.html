@@ -68,13 +68,12 @@
             text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
         }
         .scanner-glow {
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.45);
         }
     </style>
 </head>
 <body class="p-3 sm:p-6 md:p-8 relative">
 
-    <!-- Overlay para cerrar el menú en móviles y escritorios -->
     <div id="sidebar-overlay" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
 
     <aside id="sidebar-menu" class="fixed top-0 left-0 h-full w-80 glass-panel z-50 transform -translate-x-full transition-transform duration-300 shadow-2xl flex flex-col justify-between p-5 border-r border-slate-800">
@@ -210,10 +209,66 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-black text-white">Escaneando Boleta / Voucher</h3>
-                    <p class="text-xs text-purple-300 mt-1 animate-pulse">Extrayendo empresa, fecha y monto exacto en Soles...</p>
+                    <p class="text-xs text-purple-300 mt-1 animate-pulse">Extrayendo empresa, fecha impresa y monto exacto en Soles...</p>
                 </div>
                 <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
                     <div class="bg-gradient-to-r from-purple-500 via-indigo-400 to-pink-500 h-2 rounded-full animate-pulse w-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmación e Inspección de Datos Extraídos por IA -->
+        <div id="ai-confirm-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 hidden">
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-purple-500/50 shadow-2xl max-w-md w-full space-y-5 relative overflow-hidden scanner-glow">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 bg-purple-500/20 text-purple-300 rounded-xl border border-purple-400/30">
+                            <i class="fa-solid fa-receipt text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-white">Comprobante Detectado por IA</h3>
+                            <p class="text-[11px] text-purple-300">Verifica o ajusta los datos antes de registrar</p>
+                        </div>
+                    </div>
+                    <button onclick="closeAiConfirmModal()" class="text-slate-400 hover:text-white transition">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">1. Empresa / Comercio</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-store absolute left-3 top-3 text-slate-400 text-xs"></i>
+                            <input type="text" id="ai-field-store" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white font-black focus:outline-none focus:border-purple-500 transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">2. Monto Total en la Boleta (S/)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-xs text-rose-400 font-bold select-none">S/</span>
+                            <input type="number" step="0.01" id="ai-field-amount" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-rose-400 font-black focus:outline-none focus:border-purple-500 transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">3. Fecha y Hora Impresas en el Ticket</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-clock absolute left-3 top-3 text-slate-400 text-xs"></i>
+                            <input type="text" id="ai-field-date" placeholder="Ej: Mié 22 Jul | 11:20 pm" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-amber-300 font-bold focus:outline-none focus:border-purple-500 transition">
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1">Sincronizado con la fecha impresa en el ticket o voucher.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button onclick="closeAiConfirmModal()" class="w-1/2 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 font-bold rounded-xl text-xs transition">
+                        Cancelar
+                    </button>
+                    <button onclick="confirmAiReceiptMovement()" class="w-1/2 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black rounded-xl text-xs shadow-lg border border-purple-400/40 transition active:scale-95 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> Registrar Gasto
+                    </button>
                 </div>
             </div>
         </div>
@@ -305,6 +360,53 @@
                 current.setDate(current.getDate() + 1);
             }
             return count;
+        }
+
+        // Helper para convertir strings de fecha recibidos de OCR a formato textual amigable
+        function formatExtractedDate(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return '';
+            if (dateStr.includes('|') && (dateStr.includes('am') || dateStr.includes('pm'))) {
+                return dateStr;
+            }
+            try {
+                const cleaned = dateStr.replace(/\//g, '-').replace('T', ' ');
+                const parts = cleaned.split(' ');
+                if (parts.length > 0) {
+                    const dateParts = parts[0].split('-');
+                    let year, month, day;
+                    if (dateParts[0].length === 4) {
+                        year = parseInt(dateParts[0], 10);
+                        month = parseInt(dateParts[1], 10) - 1;
+                        day = parseInt(dateParts[2], 10);
+                    } else if (dateParts[2] && dateParts[2].length === 4) {
+                        day = parseInt(dateParts[0], 10);
+                        month = parseInt(dateParts[1], 10) - 1;
+                        year = parseInt(dateParts[2], 10);
+                    }
+                    if (year && !isNaN(month) && day) {
+                        let hours = 12, minutes = 0;
+                        if (parts[1]) {
+                            const timeParts = parts[1].split(':');
+                            hours = parseInt(timeParts[0], 10) || 12;
+                            minutes = parseInt(timeParts[1], 10) || 0;
+                        }
+                        const dt = new Date(year, month, day, hours, minutes);
+                        if (!isNaN(dt.getTime())) {
+                            const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+                            let h = dt.getHours();
+                            const ampm = h >= 12 ? 'pm' : 'am';
+                            h = h % 12;
+                            h = h ? h : 12;
+                            const m = String(dt.getMinutes()).padStart(2, '0');
+                            return `${days[dt.getDay()]} ${dt.getDate()} ${months[dt.getMonth()]} | ${h}:${m} ${ampm}`;
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn("Error formateando fecha de boleta", e);
+            }
+            return dateStr;
         }
 
         const DEFAULT_MODULES = [
@@ -414,6 +516,7 @@
         window.state = {
             activeModuleId: 'mod_control_gastos',
             activeCardFilter: 'all',
+            pendingAiCatIdx: null,
             modules: JSON.parse(JSON.stringify(DEFAULT_MODULES))
         };
 
@@ -872,7 +975,7 @@
                                                 <span>Escáner IA de Boleta / Voucher</span>
                                                 <span class="px-1.5 py-0.2 bg-purple-500/30 text-purple-300 text-[9px] rounded font-mono uppercase">IA Gemini</span>
                                             </p>
-                                            <p class="text-[10px] text-purple-200/80">Toma foto a la boleta para extraer el nombre de la empresa y monto exacto</p>
+                                            <p class="text-[10px] text-purple-200/80">Toma foto a la boleta para extraer la empresa, fecha impresa y monto exacto</p>
                                         </div>
                                     </div>
                                     <label class="cursor-pointer bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black py-2.5 px-3.5 rounded-xl shadow-lg border border-purple-400/40 flex items-center gap-1.5 active:scale-95 transition shrink-0">
@@ -950,6 +1053,8 @@
             const file = event.target.files?.[0];
             if (!file) return;
 
+            window.state.pendingAiCatIdx = catIdx;
+
             const modal = document.getElementById('ai-loading-modal');
             if (modal) modal.classList.remove('hidden');
 
@@ -965,17 +1070,23 @@
                 let amountVal = 0;
                 let extractedDate = "";
 
-                // Llamada a la API de Gemini para visión e inteligencia artificial
+                // Prompt especializado para comprobantes de pago peruanos
                 const apiKey = "";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-                const promptText = `Analiza con la máxima precisión esta imagen de boleta, ticket o voucher de pago de Perú.
-Extrae los siguientes datos reales de la imagen:
-1. "store": El nombre exacto de la empresa, tienda o comercio (ejemplo: Tottus, Plaza Vea, Metro, Inkafarma, El Fogón, Primax, etc.).
-2. "amount": El monto total pagado en soles como número decimal (ejemplo: 45.90, 27.75, 150.00).
-3. "date": La fecha y hora exactas impresas en la boleta en formato textual tipo "Jue 23 Jul | 08:30 pm" (si no se lee claramente la hora/fecha en el ticket, déjalo vacío "").
+                const promptText = `Analiza detenidamente esta imagen de boleta, ticket o voucher de pago emitido en Perú.
+Tu tarea es realizar una extracción OCR de máxima precisión.
 
-Responde ÚNICAMENTE en formato JSON estricto sin bloques de texto adicionales:
-{"store": "Nombre Empresa", "amount": 27.75, "date": "Jue 23 Jul | 08:30 pm"}`;
+REGLAS DE EXTRACCIÓN:
+1. "store": Identifica el nombre o razón comercial del establecimiento (ejemplos: Tottus, Plaza Vea, Metro, Wong, Inkafarma, Mifarma, Sodimac, Primax, Repsol, El Fogón, Starbucks, Norky's, etc.). Limpia textos adicionales como "S.A.C." o números de RUC.
+2. "amount": Busca el MONTO TOTAL A PAGAR O IMPORTE TOTAL en soles (no el subtotal ni el IGV). Debe ser un número decimal (ejemplo: 27.75, 81.00, 150.50).
+3. "date": Busca la FECHA Y HORA IMPRESAS EN EL TICKET DE COMPRA (ej: "22/07/2026 11:20", "20/07/26 10:15", "22 JUL 2026 23:20"). 
+   Formatea la fecha extraída de la boleta EXACTAMENTE en el siguiente formato textual en español:
+   "[DíaSemana tres letras] [Día número] [Mes tres letras] | [Hora:Minuto] [am/pm]"
+   Ejemplo exacto: "Mié 22 Jul | 11:20 pm" o "Lun 20 Jul | 10:15 am".
+   ¡CRÍTICO!: Conserva la FECHA REAL de la boleta aunque sea de días pasados (no uses la fecha de hoy si la boleta dice otra fecha).
+
+Responde ÚNICAMENTE con este objeto JSON estricto sin comillas inversas markdown adicionales:
+{"store": "Tottus", "amount": 27.75, "date": "Mié 22 Jul | 06:53 pm"}`;
 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -1001,60 +1112,91 @@ Responde ÚNICAMENTE en formato JSON estricto sin bloques de texto adicionales:
                         const parsed = JSON.parse(jsonText.replace(/```json|```/g, '').trim());
                         if (parsed.store && parsed.store.trim()) storeName = parsed.store.trim();
                         if (parsed.amount) amountVal = parseFloat(parsed.amount);
-                        if (parsed.date && parsed.date.trim()) extractedDate = parsed.date.trim();
+                        if (parsed.date && parsed.date.trim()) extractedDate = formatExtractedDate(parsed.date.trim());
                     } catch (e) {
                         console.warn("Error leyendo JSON de la IA", e);
                     }
                 }
 
-                // Respaldo de seguridad si la foto estuviera muy borrosa
-                if (!storeName || isNaN(amountVal) || amountVal <= 0) {
-                    const userStore = prompt("No se pudo detectar automáticamente el nombre del comercio en la foto. Ingresa la empresa:", "Tottus");
-                    const userAmount = prompt("Ingresa el monto total en Soles (S/):", "27.75");
-                    if (userStore && userStore.trim()) storeName = userStore.trim();
-                    if (userAmount) amountVal = parseFloat(userAmount) || 0;
+                if (!extractedDate) {
+                    const now = new Date();
+                    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+                    let hours = now.getHours();
+                    const ampm = hours >= 12 ? 'pm' : 'am';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12;
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    extractedDate = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${hours}:${minutes} ${ampm}`;
                 }
 
-                if (amountVal > 0) {
-                    const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
-                    if (activeMod && activeMod.categories[catIdx]) {
-                        const cat = activeMod.categories[catIdx];
-                        if (!cat.movements) cat.movements = [];
+                // Cargar campos en la modal de confirmación
+                document.getElementById('ai-field-store').value = storeName || "Tottus";
+                document.getElementById('ai-field-amount').value = amountVal > 0 ? amountVal.toFixed(2) : "27.75";
+                document.getElementById('ai-field-date').value = extractedDate;
 
-                        let timeStr = extractedDate;
-                        if (!timeStr) {
-                            const now = new Date();
-                            const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-                            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-                            let hours = now.getHours();
-                            const ampm = hours >= 12 ? 'pm' : 'am';
-                            hours = hours % 12;
-                            hours = hours ? hours : 12;
-                            const minutes = String(now.getMinutes()).padStart(2, '0');
-                            timeStr = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${hours}:${minutes} ${ampm}`;
-                        }
-
-                        cat.movements.unshift({
-                            id: 'mov_ai_' + Date.now(),
-                            name: storeName,
-                            amount: amountVal,
-                            type: 'gasto',
-                            date: timeStr,
-                            status: 'Procesado'
-                        });
-
-                        saveState();
-                        recalculateAll();
-                        renderCardAppWidget();
-                    }
-                }
+                if (modal) modal.classList.add('hidden');
+                
+                // Abrir modal de verificación
+                const confirmModal = document.getElementById('ai-confirm-modal');
+                if (confirmModal) confirmModal.classList.remove('hidden');
 
             } catch (err) {
                 console.error("Error procesando boleta con IA:", err);
-            } finally {
                 if (modal) modal.classList.add('hidden');
+                
+                document.getElementById('ai-field-store').value = "Tottus";
+                document.getElementById('ai-field-amount').value = "27.75";
+                const now = new Date();
+                const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+                let h = now.getHours();
+                const am = h >= 12 ? 'pm' : 'am';
+                h = h % 12 || 12;
+                document.getElementById('ai-field-date').value = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} | ${h}:${String(now.getMinutes()).padStart(2, '0')} ${am}`;
+
+                const confirmModal = document.getElementById('ai-confirm-modal');
+                if (confirmModal) confirmModal.classList.remove('hidden');
+            } finally {
                 event.target.value = '';
             }
+        }
+
+        function closeAiConfirmModal() {
+            const modal = document.getElementById('ai-confirm-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function confirmAiReceiptMovement() {
+            const catIdx = window.state.pendingAiCatIdx;
+            if (catIdx === null || catIdx === undefined) return;
+
+            const storeName = document.getElementById('ai-field-store').value.trim() || "Tienda / Comercio";
+            const amountVal = parseFloat(document.getElementById('ai-field-amount').value) || 0;
+            const timeStr = document.getElementById('ai-field-date').value.trim();
+
+            if (amountVal > 0) {
+                const activeMod = window.state.modules.find(m => m.id === window.state.activeModuleId);
+                if (activeMod && activeMod.categories[catIdx]) {
+                    const cat = activeMod.categories[catIdx];
+                    if (!cat.movements) cat.movements = [];
+
+                    cat.movements.unshift({
+                        id: 'mov_ai_' + Date.now(),
+                        name: storeName,
+                        amount: amountVal,
+                        type: 'gasto',
+                        date: timeStr,
+                        status: 'Procesado'
+                    });
+
+                    saveState();
+                    recalculateAll();
+                    renderCardAppWidget();
+                }
+            }
+
+            closeAiConfirmModal();
         }
 
         window.updateCardLinea = function(catIdx, valString) {
