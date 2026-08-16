@@ -91,331 +91,81 @@ react/cjs/react-jsx-runtime.production.js:
 */
 
   </script>
+
   <script>
-    /* Opción preparada para el futuro módulo de Préstamos. */
-    (function () {
-      function addLoanOption() {
-        document.querySelectorAll('.module-menu').forEach(function (menu) {
-          if (menu.querySelector('[data-module-prestamos]')) return;
-          var cards = menu.querySelector('.cards-menu');
-          if (!cards) return;
-          var option = document.createElement('button');
-          option.type = 'button';
-          option.dataset.modulePrestamos = 'true';
-          option.textContent = '▤ Préstamos';
-          option.addEventListener('click', function () {
-            var modulesButton = document.querySelector('.modules-button');
-            if (modulesButton) modulesButton.click();
-          });
-          menu.insertBefore(option, cards);
-        });
-      }
-      new MutationObserver(addLoanOption).observe(document.body, { childList: true, subtree: true });
-      addLoanOption();
-    }());
-  </script>
-  <script>
-    (function () {
-      var LOANS_KEY = 'control-gastos-prestamos-v1';
-      function money(value) {
-        return 'S/ ' + Number(value || 0).toFixed(2);
-      }
-      function getLoans() {
-        try {
-          var loans = JSON.parse(localStorage.getItem(LOANS_KEY) || '[]');
-          return Array.isArray(loans) ? loans : [];
-        } catch (error) { return []; }
-      }
-      function setLoans(loans) {
-        localStorage.setItem(LOANS_KEY, JSON.stringify(loans));
-      }
-      function loanScreen() {
-        var root = document.getElementById('root');
-        if (!root) return;
-        root.innerHTML = '<main class="app-shell loans-view">' +
-          '<header class="topbar"><div class="brand-group"><button class="modules-button" id="back-to-finance">← MÓDULOS</button><div class="module-icon">₴</div><div><h1>Préstamos</h1><p>Control de capital, interés y cobro por cliente</p></div></div><div class="date-control">▣ <span>Control:</span> <strong>Préstamos activos</strong></div></header>' +
-          '<section class="advisor-card loans-hero"><p class="eyebrow"><span></span> CARTERA DE PRÉSTAMOS</p><h2>Registra y controla tus préstamos</h2><p>El interés se calcula de forma simple: monto × porcentaje. Puedes agregar varios clientes.</p><div class="loan-stats" id="loan-stats"></div></section>' +
-          '<section class="control-card loan-form-card"><div class="control-heading"><div><h2>₴ Nuevo préstamo</h2><p>Completa los datos y revisa el cálculo antes de guardarlo.</p></div><div class="legend">Cálculo: <b>INTERÉS SIMPLE</b></div></div>' +
-          '<div class="loan-form"><label>Fecha<input id="loan-date" type="date"></label><label>Nombre del cliente<input id="loan-name" type="text" placeholder="Ej.: María López"></label><label>Monto prestado (S/)<input id="loan-amount" type="number" min="0" step="0.01" placeholder="0.00"></label><label>Interés (%)<input id="loan-rate" type="number" min="0" step="0.01" placeholder="0"></label></div>' +
-          '<div class="loan-calculation"><div><span>Interés calculado</span><strong id="interest-result">S/ 0.00</strong></div><div><span>Total a cobrar</span><strong id="total-result">S/ 0.00</strong></div><button id="add-loan" type="button">＋ Agregar préstamo</button></div></section>' +
-          '<section class="control-card loan-list-card"><div class="control-heading"><div><h2>▤ Clientes y préstamos registrados</h2><p>Los datos se guardan en este dispositivo.</p></div></div><div class="table-wrap"><table class="loans-table"><thead><tr><th>FECHA</th><th>CLIENTE</th><th>MONTO</th><th>INTERÉS</th><th>TOTAL A COBRAR</th><th></th></tr></thead><tbody id="loan-list"></tbody></table></div><button id="new-loan-bottom" class="new-loan-bottom" type="button">＋ Agregar otro cliente / préstamo</button></section>' +
-          '<footer><span>© 2026 Asesor Financiero Personal. Módulo de Préstamos.</span><span class="sync">⟳ Guardado local</span></footer></main>';
-        var style = document.getElementById('loans-style');
-        if (!style) {
-          style = document.createElement('style');
-          style.id = 'loans-style';
-          style.textContent = '.loans-hero h2{margin:0 0 8px;font-size:22px}.loans-hero>p:not(.eyebrow){margin:0;color:#b9c7d9}.loan-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:23px}.loan-stats>div{background:#0a1325;border:1px solid #263650;border-radius:12px;padding:16px}.loan-stats span{display:block;color:#91a2ba;font-size:12px}.loan-stats strong{display:block;font-size:20px;margin-top:5px}.loan-form{display:grid;grid-template-columns:1fr 1.45fr 1fr 1fr;gap:14px;padding:0 20px 20px}.loan-form label{color:#aebbd0;font-size:12px;font-weight:700}.loan-form input{display:block;width:100%;margin-top:7px;background:#050c1c;border:1px solid #2b3c57;border-radius:8px;color:#fff;padding:11px;outline:0;color-scheme:dark}.loan-form input:focus{border-color:#17d5a8}.loan-calculation{border-top:1px solid #1f2d45;padding:18px 20px;display:flex;gap:24px;align-items:center}.loan-calculation>div{min-width:155px}.loan-calculation span{display:block;color:#92a3bb;font-size:12px}.loan-calculation strong{display:block;color:#1bd7a8;font-size:20px;margin-top:4px}.loan-calculation>div:nth-child(2) strong{color:#ffc229}.loan-calculation button,.new-loan-bottom{margin-left:auto;border:0;border-radius:9px;background:linear-gradient(90deg,#0cb996,#19cbb2);color:#062031;font-weight:900;padding:12px 16px;cursor:pointer}.loan-list-card{padding-bottom:18px}.loans-table{min-width:680px}.loans-table th:first-child,.loans-table td:first-child{min-width:120px}.loans-table td{font-weight:700}.loan-empty{padding:24px!important;text-align:center!important;color:#8fa0ba}.loan-delete{border:1px solid #803049;background:#291221;color:#ff7a98;border-radius:6px;padding:6px 9px;cursor:pointer}.new-loan-bottom{display:block;margin:20px auto 0;background:transparent;color:#16d8aa;border:1px dashed #16a989}.loans-view{min-height:100vh}@media(max-width:700px){.loan-stats{grid-template-columns:1fr 1fr}.loan-form{grid-template-columns:1fr 1fr;padding:0 15px 16px}.loan-form label:nth-child(2){grid-column:1/-1}.loan-calculation{flex-wrap:wrap;padding:16px}.loan-calculation button{width:100%;margin:0}.loan-calculation>div{flex:1;min-width:120px}}';
-          document.head.appendChild(style);
-        }
-        function values() {
-          return {
-            date: document.getElementById('loan-date').value,
-            name: document.getElementById('loan-name').value.trim(),
-            amount: Math.max(0, Number(document.getElementById('loan-amount').value || 0)),
-            rate: Math.max(0, Number(document.getElementById('loan-rate').value || 0))
-          };
-        }
-        function updateCalculation() {
-          var data = values();
-          var interest = data.amount * data.rate / 100;
-          document.getElementById('interest-result').textContent = money(interest);
-          document.getElementById('total-result').textContent = money(data.amount + interest);
-        }
-        function renderList() {
-          var loans = getLoans();
-          var capital = loans.reduce(function (sum, loan) { return sum + Number(loan.amount || 0); }, 0);
-          var interest = loans.reduce(function (sum, loan) { return sum + Number(loan.interest || 0); }, 0);
-          document.getElementById('loan-stats').innerHTML = '<div><span>Capital prestado</span><strong class="blue">' + money(capital) + '</strong></div><div><span>Interés estimado</span><strong class="green">' + money(interest) + '</strong></div><div><span>Total por cobrar</span><strong class="pink">' + money(capital + interest) + '</strong></div><div><span>Clientes activos</span><strong class="green">' + loans.length + '</strong></div>';
-          var list = document.getElementById('loan-list');
-          if (!loans.length) {
-            list.innerHTML = '<tr><td class="loan-empty" colspan="6">Aún no hay préstamos registrados. Usa el formulario para agregar el primero.</td></tr>';
-            return;
-          }
-          list.innerHTML = loans.map(function (loan) {
-            return '<tr><td>' + loan.date.split('-').reverse().join('/') + '</td><td>' + loan.name.replace(/</g, '&lt;') + '</td><td>' + money(loan.amount) + '</td><td class="positive">' + loan.rate + '% · ' + money(loan.interest) + '</td><td class="total">' + money(loan.total) + '</td><td><button class="loan-delete" data-delete-loan="' + loan.id + '">⌫</button></td></tr>';
-          }).join('');
-        }
-        document.getElementById('loan-date').value = new Date().toISOString().slice(0, 10);
-        ['loan-amount', 'loan-rate'].forEach(function (id) { document.getElementById(id).addEventListener('input', updateCalculation); });
-        document.getElementById('add-loan').addEventListener('click', function () {
-          var data = values();
-          if (!data.date || !data.name || data.amount <= 0) {
-            alert('Completa la fecha, el nombre del cliente y un monto mayor a cero.');
-            return;
-          }
-          var interest = data.amount * data.rate / 100;
-          var loans = getLoans();
-          loans.unshift({ id: Date.now(), date: data.date, name: data.name, amount: data.amount, rate: data.rate, interest: interest, total: data.amount + interest });
-          setLoans(loans);
-          document.getElementById('loan-name').value = '';
-          document.getElementById('loan-amount').value = '';
-          document.getElementById('loan-rate').value = '';
-          updateCalculation();
-          renderList();
-        });
-        document.getElementById('new-loan-bottom').addEventListener('click', function () { document.getElementById('loan-name').focus(); });
-        document.getElementById('loan-list').addEventListener('click', function (event) {
-          var button = event.target.closest('[data-delete-loan]');
-          if (!button) return;
-          setLoans(getLoans().filter(function (loan) { return String(loan.id) !== String(button.dataset.deleteLoan); }));
-          renderList();
-        });
-        document.getElementById('back-to-finance').addEventListener('click', function () { window.location.reload(); });
-        updateCalculation();
-        renderList();
-      }
-      document.addEventListener('click', function (event) {
-        var target = event.target.closest && event.target.closest('[data-module-prestamos]');
-        if (!target) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        loanScreen();
-      }, true);
-    }());
-  </script>
-  <script>
-    (function () {
-      /* Mejora del módulo: el interés es un importe fijo definido por el administrador. */
-      var LOANS_KEY_V2 = 'control-gastos-prestamos-v1';
-      function toSoles(value) { return 'S/ ' + Number(value || 0).toFixed(2); }
-      function safeName(value) { return String(value || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-      function loansV2() {
-        try {
-          var list = JSON.parse(localStorage.getItem(LOANS_KEY_V2) || '[]');
-          return Array.isArray(list) ? list : [];
-        } catch (error) { return []; }
-      }
-      function saveLoansV2(list) { localStorage.setItem(LOANS_KEY_V2, JSON.stringify(list)); }
-      function renderLoansV2() {
-        var root = document.getElementById('root');
-        if (!root) return;
-        root.innerHTML = '<main class="app-shell loans-view" data-loans-v2="true">' +
-          '<header class="topbar"><div class="brand-group"><button class="modules-button" id="back-to-finance-v2">← MÓDULOS</button><div class="module-icon">₴</div><div><h1>Préstamos</h1><p>Control de capital, interés y cobro por cliente</p></div></div><div class="date-control">▣ <span>Control:</span> <strong>Préstamos activos</strong></div></header>' +
-          '<section class="advisor-card loans-hero"><p class="eyebrow"><span></span> CARTERA DE PRÉSTAMOS</p><h2>Registra y controla tus préstamos</h2><p>El administrador define el interés como un monto fijo adicional al préstamo.</p><div class="loan-stats" id="loan-stats-v2"></div></section>' +
-          '<section class="control-card loan-form-card"><div class="control-heading"><div><h2>₴ Nuevo préstamo</h2><p>Registra los datos del cliente y el interés acordado.</p></div><div class="legend">TOTAL = <b>MONTO + INTERÉS</b></div></div>' +
-          '<div class="loan-form"><label>Fecha<input id="loan-date-v2" type="date"></label><label>Nombre del cliente<input id="loan-name-v2" type="text" placeholder="Ej.: María López"></label><label>Monto prestado (S/)<input id="loan-amount-v2" type="number" min="0" step="0.01" placeholder="0.00"></label><label>Interés acordado (S/)<input id="loan-interest-v2" type="number" min="0" step="0.01" placeholder="Ej.: 20.00"><small>Monto definido por el administrador</small></label></div>' +
-          '<div class="loan-calculation"><div><span>Interés adicional</span><strong id="interest-result-v2">S/ 0.00</strong></div><div><span>Total a cobrar</span><strong id="total-result-v2">S/ 0.00</strong></div><button id="add-loan-v2" type="button">＋ Agregar préstamo</button></div></section>' +
-          '<section class="control-card loan-list-card"><div class="control-heading"><div><h2>▤ Historial de clientes y préstamos</h2><p>Marca el check cuando el cliente termine de pagar.</p></div></div><div class="table-wrap"><table class="loans-table"><thead><tr><th>FECHA</th><th>CLIENTE</th><th>MONTO</th><th>INTERÉS</th><th>TOTAL A COBRAR</th><th>¿PAGÓ?</th><th>DÍAS SIN PAGAR</th><th></th></tr></thead><tbody id="loan-list-v2"></tbody></table></div><button id="new-loan-bottom-v2" class="new-loan-bottom" type="button">＋ Agregar otro cliente / préstamo</button></section>' +
-          '<footer><span>© 2026 Asesor Financiero Personal. Módulo de Préstamos.</span><span class="sync">⟳ Guardado local</span></footer></main>';
-        var styles = document.getElementById('loans-style-v2');
-        if (!styles) {
-          styles = document.createElement('style');
-          styles.id = 'loans-style-v2';
-          styles.textContent = '.loans-view small{display:block;color:#16d8aa;font-size:10px;margin-top:5px;font-weight:600}.loan-paid-check{width:18px;height:18px;accent-color:#17cfa6;cursor:pointer}.paid-label{font-size:12px;color:#b8c6d8;display:inline-flex;gap:7px;align-items:center;justify-content:center}.days-pending{color:#ffc229;font-weight:800}.days-paid{color:#16d8aa;font-weight:800}';
-          document.head.appendChild(styles);
-        }
-        function currentValues() {
-          return {
-            date: document.getElementById('loan-date-v2').value,
-            name: document.getElementById('loan-name-v2').value.trim(),
-            amount: Math.max(0, Number(document.getElementById('loan-amount-v2').value || 0)),
-            interest: Math.max(0, Number(document.getElementById('loan-interest-v2').value || 0))
-          };
-        }
-        function updateTotal() {
-          var item = currentValues();
-          document.getElementById('interest-result-v2').textContent = toSoles(item.interest);
-          document.getElementById('total-result-v2').textContent = toSoles(item.amount + item.interest);
-        }
-        function unpaidDays(date) {
-          var start = new Date(date + 'T00:00:00');
-          var today = new Date();
-          today.setHours(0, 0, 0, 0);
-          return Math.max(0, Math.floor((today.getTime() - start.getTime()) / 86400000));
-        }
-        function renderHistory() {
-          var list = loansV2();
-          var capital = list.reduce(function (sum, loan) { return sum + Number(loan.amount || 0); }, 0);
-          var interest = list.reduce(function (sum, loan) { return sum + Number(loan.interest || 0); }, 0);
-          var pending = list.filter(function (loan) { return !loan.paid; }).length;
-          document.getElementById('loan-stats-v2').innerHTML = '<div><span>Capital prestado</span><strong class="blue">' + toSoles(capital) + '</strong></div><div><span>Interés acordado</span><strong class="green">' + toSoles(interest) + '</strong></div><div><span>Total por cobrar</span><strong class="pink">' + toSoles(capital + interest) + '</strong></div><div><span>Clientes sin pagar</span><strong class="green">' + pending + '</strong></div>';
-          var body = document.getElementById('loan-list-v2');
-          if (!list.length) {
-            body.innerHTML = '<tr><td class="loan-empty" colspan="8">Aún no hay préstamos registrados. Usa el formulario para agregar el primero.</td></tr>';
-            return;
-          }
-          body.innerHTML = list.map(function (loan) {
-            var paid = Boolean(loan.paid);
-            var days = paid ? '—' : unpaidDays(loan.date) + ' día(s)';
-            return '<tr><td>' + String(loan.date || '').split('-').reverse().join('/') + '</td><td>' + safeName(loan.name) + '</td><td>' + toSoles(loan.amount) + '</td><td class="positive">' + toSoles(loan.interest) + '</td><td class="total">' + toSoles(loan.total) + '</td><td><label class="paid-label"><input class="loan-paid-check" type="checkbox" data-paid-loan="' + loan.id + '"' + (paid ? ' checked' : '') + '> ' + (paid ? 'Sí, pagó' : 'No pagó') + '</label></td><td class="' + (paid ? 'days-paid' : 'days-pending') + '">' + days + '</td><td><button class="loan-delete" data-delete-loan-v2="' + loan.id + '">⌫</button></td></tr>';
-          }).join('');
-        }
-        document.getElementById('loan-date-v2').value = new Date().toISOString().slice(0, 10);
-        ['loan-amount-v2', 'loan-interest-v2'].forEach(function (id) { document.getElementById(id).addEventListener('input', updateTotal); });
-        document.getElementById('add-loan-v2').addEventListener('click', function () {
-          var data = currentValues();
-          if (!data.date || !data.name || data.amount <= 0) {
-            alert('Completa la fecha, el nombre del cliente y un monto mayor a cero.');
-            return;
-          }
-          var list = loansV2();
-          list.unshift({ id: Date.now(), date: data.date, name: data.name, amount: data.amount, interest: data.interest, total: data.amount + data.interest, paid: false });
-          saveLoansV2(list);
-          document.getElementById('loan-name-v2').value = '';
-          document.getElementById('loan-amount-v2').value = '';
-          document.getElementById('loan-interest-v2').value = '';
-          updateTotal();
-          renderHistory();
-        });
-        document.getElementById('new-loan-bottom-v2').addEventListener('click', function () { document.getElementById('loan-name-v2').focus(); });
-        document.getElementById('loan-list-v2').addEventListener('change', function (event) {
-          var check = event.target.closest('[data-paid-loan]');
-          if (!check) return;
-          var list = loansV2().map(function (loan) {
-            return String(loan.id) === String(check.dataset.paidLoan) ? Object.assign({}, loan, { paid: check.checked }) : loan;
-          });
-          saveLoansV2(list);
-          renderHistory();
-        });
-        document.getElementById('loan-list-v2').addEventListener('click', function (event) {
-          var button = event.target.closest('[data-delete-loan-v2]');
-          if (!button) return;
-          saveLoansV2(loansV2().filter(function (loan) { return String(loan.id) !== String(button.dataset.deleteLoanV2); }));
-          renderHistory();
-        });
-        document.getElementById('back-to-finance-v2').addEventListener('click', function () { window.location.reload(); });
-        updateTotal();
-        renderHistory();
-      }
-      var observer = new MutationObserver(function () {
-        var oldView = document.querySelector('.loans-view:not([data-loans-v2]):not([data-loans-v3])');
-        if (oldView) renderLoansV2();
+  (function () {
+    var LOANS = 'control-gastos-prestamos-v1';
+    var SAVINGS = 'control-gastos-prestamos-ahorro-v1';
+    function readLoans() { try { var x = JSON.parse(localStorage.getItem(LOANS) || '[]'); return Array.isArray(x) ? x : []; } catch (e) { return []; } }
+    function saveLoans(x) { localStorage.setItem(LOANS, JSON.stringify(x)); }
+    function n(v) { return Math.max(0, Number(v || 0)); }
+    function soles(v) { return 'S/ ' + n(v).toFixed(2); }
+    function safe(v) { return String(v || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function today() { return new Date().toISOString().slice(0, 10); }
+    function parts(x) {
+      var fixed = x.fixedInterest !== undefined ? n(x.fixedInterest) : n(x.interest);
+      var rate = n(x.rate);
+      var percent = x.percentInterest !== undefined ? n(x.percentInterest) : n(x.amount) * rate / 100;
+      return { fixed: fixed, rate: rate, percent: percent, interest: fixed + percent, total: n(x.amount) + fixed + percent };
+    }
+    function unpaidDays(date) {
+      var start = new Date(date + 'T00:00:00'), now = new Date();
+      now.setHours(0, 0, 0, 0);
+      return Math.max(0, Math.floor((now - start) / 86400000));
+    }
+    function addMenuOption() {
+      document.querySelectorAll('.module-menu').forEach(function (menu) {
+        if (menu.querySelector('[data-open-loans]')) return;
+        var cards = menu.querySelector('.cards-menu');
+        if (!cards) return;
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.openLoans = 'true';
+        button.textContent = '₴ Préstamos';
+        menu.insertBefore(button, cards);
       });
-      observer.observe(document.body, { childList: true, subtree: true });
-    }());
-  </script>
-  <script>
-    (function () {
-      var LOANS_KEY_V3 = 'control-gastos-prestamos-v1';
-      function s3(value) { return 'S/ ' + Number(value || 0).toFixed(2); }
-      function esc3(value) { return String(value || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-      function read3() {
-        try { var data = JSON.parse(localStorage.getItem(LOANS_KEY_V3) || '[]'); return Array.isArray(data) ? data : []; }
-        catch (error) { return []; }
+    }
+    function installStyle() {
+      if (document.getElementById('clean-loans-style')) return;
+      var style = document.createElement('style');
+      style.id = 'clean-loans-style';
+      style.textContent = '.loan-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}.loan-summary>div{background:#0a1325;border:1px solid #263650;border-radius:12px;padding:15px}.loan-summary span{display:block;color:#91a2ba;font-size:12px}.loan-summary strong{display:block;font-size:19px;margin-top:5px}.loan-form-clean{display:grid;grid-template-columns:1fr 1.35fr 1fr 1fr 1fr;gap:13px;padding:0 20px 20px}.loan-form-clean label{color:#aebdd1;font-size:12px;font-weight:700}.loan-form-clean input,.saving-input{display:block;width:100%;margin-top:7px;background:#050c1c;border:1px solid #2b3c57;border-radius:8px;color:#fff;padding:10px;outline:0;color-scheme:dark}.loan-form-clean small{display:block;color:#16d8aa;font-size:10px;margin-top:5px}.loan-calculation-clean{border-top:1px solid #1f2d45;padding:18px 20px;display:flex;gap:15px;align-items:center;flex-wrap:wrap}.loan-calculation-clean>div{min-width:118px}.loan-calculation-clean span{display:block;color:#92a3bb;font-size:11px}.loan-calculation-clean strong{display:block;font-size:18px;margin-top:4px;color:#17d8a8}.loan-calculation-clean div:last-of-type strong{color:#ffc229}.loan-action,.save-saving,.new-loan-clean{border:0;border-radius:9px;background:linear-gradient(90deg,#0cb996,#19cbb2);color:#062031;font-weight:900;padding:11px 15px;cursor:pointer}.saving-row{display:flex;align-items:end;gap:12px;margin-top:18px}.saving-row label{color:#aebdd1;font-size:12px;font-weight:700;max-width:290px;flex:1}.save-saving{background:#073b36;color:#19d6a9;border:1px solid #16b993}.payment-choice{display:flex;flex-direction:column;align-items:flex-start;gap:5px}.payment-choice label{font-size:11px;color:#b8c6d8;display:flex;gap:6px;align-items:center;white-space:nowrap}.payment-choice input{width:16px;height:16px;accent-color:#18cfa8}.payment-choice input[data-status="pending"]{accent-color:#ffc229}.loan-delete-clean{border:1px solid #803049;background:#291221;color:#ff7a98;border-radius:6px;padding:6px 9px;cursor:pointer}.new-loan-clean{display:block;margin:20px auto 0;background:transparent;border:1px dashed #16a989;color:#16d8aa}.days-pending{color:#ffc229;font-weight:800}.days-paid{color:#16d8aa;font-weight:800}@media(max-width:900px){.loan-form-clean{grid-template-columns:1fr 1fr}.loan-form-clean label:nth-child(2){grid-column:1/-1}.loan-summary{grid-template-columns:1fr 1fr}.saving-row{flex-direction:column;align-items:stretch}.saving-row label{max-width:none}.save-saving{width:100%}}';
+      document.head.appendChild(style);
+    }
+    function showLoans() {
+      installStyle();
+      var root = document.getElementById('root'); if (!root) return;
+      root.innerHTML = '<main class="app-shell loans-clean" data-loans-clean="true">' +
+        '<header class="topbar"><div class="brand-group"><button class="modules-button" id="loan-back">← MÓDULOS</button><div class="module-icon">₴</div><div><h1>Préstamos</h1><p>Control de capital, interés y cuenta de ahorro</p></div></div><div class="date-control">▣ <span>Control:</span> <strong>Préstamos activos</strong></div></header>' +
+        '<section class="advisor-card"><p class="eyebrow"><span></span> CUENTA DE AHORRO Y PRÉSTAMOS</p><h2 style="margin:0 0 8px">Dinero prestado, cobrado y pendiente</h2><p style="margin:0;color:#b9c7d9">El capital prestado sale temporalmente del ahorro. Solo un pago efectivo vuelve a sumar capital e interés.</p><div class="saving-row"><label>Saldo inicial de cuenta de ahorro (S/)<input id="saving-initial" class="saving-input" type="number" min="0" step="0.01" placeholder="0.00"></label><button id="save-saving" class="save-saving" type="button">Guardar saldo</button></div><div class="loan-summary" id="loan-summary"></div></section>' +
+        '<section class="control-card"><div class="control-heading"><div><h2>₴ Nuevo préstamo</h2><p>Interés fijo y porcentaje pueden usarse por separado o juntos.</p></div><div class="legend">TOTAL = <b>MONTO + INTERESES</b></div></div>' +
+        '<div class="loan-form-clean"><label>Fecha<input id="loan-date" type="date"></label><label>Nombre del cliente<input id="loan-name" type="text" placeholder="Ej.: María López"></label><label>Monto prestado (S/)<input id="loan-amount" type="number" min="0" step="0.01" placeholder="0.00"></label><label>Interés acordado (S/)<input id="loan-fixed" type="number" min="0" step="0.01" placeholder="Ej.: 20.00"><small>Monto fijo manual</small></label><label>Interés (%)<input id="loan-rate" type="number" min="0" step="0.01" placeholder="Ej.: 10"><small>Sobre el monto prestado</small></label></div>' +
+        '<div class="loan-calculation-clean"><div><span>Interés fijo</span><strong id="out-fixed">S/ 0.00</strong></div><div><span>Interés por %</span><strong id="out-percent">S/ 0.00</strong></div><div><span>Interés total</span><strong id="out-interest">S/ 0.00</strong></div><div><span>Total a cobrar</span><strong id="out-total">S/ 0.00</strong></div><button class="loan-action" id="add-loan" type="button">＋ Agregar préstamo</button></div></section>' +
+        '<section class="control-card loan-list-card"><div class="control-heading"><div><h2>▤ Historial de clientes y préstamos</h2><p>Marca una sola opción: pago efectivo o pendiente de pago.</p></div></div><div class="table-wrap"><table class="loans-table"><thead><tr><th>FECHA</th><th>CLIENTE</th><th>MONTO</th><th>INT. ACORDADO</th><th>INT. (%)</th><th>INT. TOTAL</th><th>TOTAL</th><th>ESTADO DE PAGO</th><th>FECHA PAGO</th><th>DÍAS SIN PAGAR</th><th></th></tr></thead><tbody id="loan-history"></tbody></table></div><button id="new-loan" class="new-loan-clean" type="button">＋ Agregar otro cliente / préstamo</button></section><footer><span>© 2026 Asesor Financiero Personal.</span><span class="sync">⟳ Guardado local</span></footer></main>';
+      root.querySelector('#saving-initial').value = Number(localStorage.getItem(SAVINGS) || 0) || '';
+      root.querySelector('#loan-date').value = today();
+      function field() { return { date: root.querySelector('#loan-date').value, name: root.querySelector('#loan-name').value.trim(), amount:n(root.querySelector('#loan-amount').value), fixed:n(root.querySelector('#loan-fixed').value), rate:n(root.querySelector('#loan-rate').value) }; }
+      function calc() { var d=field(), pct=d.amount*d.rate/100; root.querySelector('#out-fixed').textContent=soles(d.fixed);root.querySelector('#out-percent').textContent=soles(pct);root.querySelector('#out-interest').textContent=soles(d.fixed+pct);root.querySelector('#out-total').textContent=soles(d.amount+d.fixed+pct); }
+      function draw() {
+        var list=readLoans(), initial=n(localStorage.getItem(SAVINGS)), lent=list.reduce(function(s,x){return s+n(x.amount);},0), active=list.filter(function(x){return !x.paid;}), pendingCapital=active.reduce(function(s,x){return s+n(x.amount);},0), expected=active.reduce(function(s,x){return s+parts(x).interest;},0), earned=list.filter(function(x){return x.paid;}).reduce(function(s,x){return s+parts(x).interest;},0), received=list.filter(function(x){return x.paid;}).reduce(function(s,x){return s+parts(x).total;},0), balance=initial-lent+received;
+        root.querySelector('#loan-summary').innerHTML='<div><span>Capital prestado</span><strong class="blue">'+soles(pendingCapital)+'</strong></div><div><span>Interés esperado</span><strong class="pink">'+soles(expected)+'</strong></div><div><span>Ganancia cobrada</span><strong class="green">'+soles(earned)+'</strong></div><div><span>Recibido en ahorro</span><strong class="green">'+soles(received)+'</strong></div><div><span>Saldo estimado ahorro</span><strong class="'+(balance>=0?'green':'pink')+'">'+soles(balance)+'</strong></div><div><span>Clientes pendientes</span><strong class="blue">'+active.length+'</strong></div>';
+        var body=root.querySelector('#loan-history');
+        if(!list.length){body.innerHTML='<tr><td class="loan-empty" colspan="11">Aún no hay préstamos registrados.</td></tr>';return;}
+        body.innerHTML=list.map(function(x){var p=parts(x), paid=!!x.paid, pd=x.paymentDate?x.paymentDate.split('-').reverse().join('/'):'—';return '<tr><td>'+String(x.date||'').split('-').reverse().join('/')+'</td><td>'+safe(x.name)+'</td><td>'+soles(x.amount)+'</td><td class="positive">'+soles(p.fixed)+'</td><td>'+p.rate+'% · '+soles(p.percent)+'</td><td class="positive">'+soles(p.interest)+'</td><td class="total">'+soles(p.total)+'</td><td><div class="payment-choice"><label><input type="checkbox" data-status="paid" data-id="'+x.id+'"'+(paid?' checked':'')+'> Pago efectivo</label><label><input type="checkbox" data-status="pending" data-id="'+x.id+'"'+(!paid?' checked':'')+'> Pendiente</label></div></td><td>'+pd+'</td><td class="'+(paid?'days-paid':'days-pending')+'">'+(paid?'—':unpaidDays(x.date)+' día(s)')+'</td><td><button class="loan-delete-clean" data-delete="'+x.id+'">⌫</button></td></tr>';}).join('');
       }
-      function write3(data) { localStorage.setItem(LOANS_KEY_V3, JSON.stringify(data)); }
-      function loanParts(loan) {
-        var fixed = loan.fixedInterest !== undefined ? Number(loan.fixedInterest || 0) : Number(loan.interest || 0);
-        var rate = Number(loan.rate || 0);
-        var percent = loan.percentInterest !== undefined ? Number(loan.percentInterest || 0) : Number(loan.amount || 0) * rate / 100;
-        return { fixed: fixed, rate: rate, percent: percent, interest: fixed + percent, total: Number(loan.amount || 0) + fixed + percent };
-      }
-      function renderV3() {
-        var root = document.getElementById('root');
-        if (!root) return;
-        root.innerHTML = '<main class="app-shell loans-view loans-v3" data-loans-v3="true">' +
-          '<header class="topbar"><div class="brand-group"><button class="modules-button" id="back-to-finance-v3">← MÓDULOS</button><div class="module-icon">₴</div><div><h1>Préstamos</h1><p>Control de capital, interés y cobro por cliente</p></div></div><div class="date-control">▣ <span>Control:</span> <strong>Préstamos activos</strong></div></header>' +
-          '<section class="advisor-card loans-hero"><p class="eyebrow"><span></span> CARTERA DE PRÉSTAMOS</p><h2>Registra y controla tus préstamos</h2><p>Define un interés fijo, un porcentaje, o ambos según el acuerdo con cada cliente.</p><div class="loan-stats" id="loan-stats-v3"></div></section>' +
-          '<section class="control-card loan-form-card"><div class="control-heading"><div><h2>₴ Nuevo préstamo</h2><p>Los dos tipos de interés se calculan por separado.</p></div><div class="legend">TOTAL = <b>MONTO + INTERESES</b></div></div>' +
-          '<div class="loan-form"><label>Fecha<input id="loan-date-v3" type="date"></label><label>Nombre del cliente<input id="loan-name-v3" type="text" placeholder="Ej.: María López"></label><label>Monto prestado (S/)<input id="loan-amount-v3" type="number" min="0" step="0.01" placeholder="0.00"></label><label>Interés acordado (S/)<input id="loan-fixed-v3" type="number" min="0" step="0.01" placeholder="Ej.: 20.00"><small>Monto fijo manual</small></label><label>Interés (%)<input id="loan-rate-v3" type="number" min="0" step="0.01" placeholder="Ej.: 10"><small>Se calcula sobre el préstamo</small></label></div>' +
-          '<div class="loan-calculation loan-calculation-v3"><div><span>Interés fijo</span><strong id="fixed-result-v3">S/ 0.00</strong></div><div><span>Interés por %</span><strong id="percent-result-v3">S/ 0.00</strong></div><div><span>Interés total</span><strong id="interest-result-v3">S/ 0.00</strong></div><div><span>Total a cobrar</span><strong id="total-result-v3">S/ 0.00</strong></div><button id="add-loan-v3" type="button">＋ Agregar préstamo</button></div></section>' +
-          '<section class="control-card loan-list-card"><div class="control-heading"><div><h2>▤ Historial de clientes y préstamos</h2><p>Marca el check cuando el cliente termine de pagar.</p></div></div><div class="table-wrap"><table class="loans-table"><thead><tr><th>FECHA</th><th>CLIENTE</th><th>MONTO</th><th>INTERÉS ACORDADO</th><th>INTERÉS (%)</th><th>INTERÉS TOTAL</th><th>TOTAL A COBRAR</th><th>¿PAGÓ?</th><th>DÍAS SIN PAGAR</th><th></th></tr></thead><tbody id="loan-list-v3"></tbody></table></div><button id="new-loan-bottom-v3" class="new-loan-bottom" type="button">＋ Agregar otro cliente / préstamo</button></section>' +
-          '<footer><span>© 2026 Asesor Financiero Personal. Módulo de Préstamos.</span><span class="sync">⟳ Guardado local</span></footer></main>';
-        var css = document.getElementById('loans-style-v3');
-        if (!css) {
-          css = document.createElement('style');
-          css.id = 'loans-style-v3';
-          css.textContent = '.loans-v3 .loan-form{grid-template-columns:1fr 1.45fr 1fr 1fr 1fr}.loans-v3 .loan-calculation{gap:16px}.loans-v3 .loan-calculation>div{min-width:120px}.loans-v3 .loan-calculation>div:nth-child(3) strong{color:#17d8a8}.loans-v3 .loan-calculation>div:nth-child(4) strong{color:#ffc229}@media(max-width:900px){.loans-v3 .loan-form{grid-template-columns:1fr 1fr}.loans-v3 .loan-form label:nth-child(2){grid-column:1/-1}.loans-v3 .loan-calculation{flex-wrap:wrap}}';
-          document.head.appendChild(css);
-        }
-        function fields() {
-          return { date: document.getElementById('loan-date-v3').value, name: document.getElementById('loan-name-v3').value.trim(), amount: Math.max(0, Number(document.getElementById('loan-amount-v3').value || 0)), fixed: Math.max(0, Number(document.getElementById('loan-fixed-v3').value || 0)), rate: Math.max(0, Number(document.getElementById('loan-rate-v3').value || 0)) };
-        }
-        function calculate() {
-          var data = fields();
-          var percent = data.amount * data.rate / 100;
-          document.getElementById('fixed-result-v3').textContent = s3(data.fixed);
-          document.getElementById('percent-result-v3').textContent = s3(percent);
-          document.getElementById('interest-result-v3').textContent = s3(data.fixed + percent);
-          document.getElementById('total-result-v3').textContent = s3(data.amount + data.fixed + percent);
-        }
-        function days3(date) {
-          var start = new Date(date + 'T00:00:00'), today = new Date();
-          today.setHours(0, 0, 0, 0);
-          return Math.max(0, Math.floor((today.getTime() - start.getTime()) / 86400000));
-        }
-        function history() {
-          var items = read3();
-          var capital = items.reduce(function (sum, loan) { return sum + Number(loan.amount || 0); }, 0);
-          var interest = items.reduce(function (sum, loan) { return sum + loanParts(loan).interest; }, 0);
-          var pending = items.filter(function (loan) { return !loan.paid; }).length;
-          document.getElementById('loan-stats-v3').innerHTML = '<div><span>Capital prestado</span><strong class="blue">' + s3(capital) + '</strong></div><div><span>Intereses aplicados</span><strong class="green">' + s3(interest) + '</strong></div><div><span>Total por cobrar</span><strong class="pink">' + s3(capital + interest) + '</strong></div><div><span>Clientes sin pagar</span><strong class="green">' + pending + '</strong></div>';
-          var body = document.getElementById('loan-list-v3');
-          if (!items.length) { body.innerHTML = '<tr><td class="loan-empty" colspan="10">Aún no hay préstamos registrados. Usa el formulario para agregar el primero.</td></tr>'; return; }
-          body.innerHTML = items.map(function (loan) {
-            var parts = loanParts(loan), paid = Boolean(loan.paid), pendingDays = paid ? '—' : days3(loan.date) + ' día(s)';
-            return '<tr><td>' + String(loan.date || '').split('-').reverse().join('/') + '</td><td>' + esc3(loan.name) + '</td><td>' + s3(loan.amount) + '</td><td class="positive">' + s3(parts.fixed) + '</td><td>' + parts.rate + '% · ' + s3(parts.percent) + '</td><td class="positive">' + s3(parts.interest) + '</td><td class="total">' + s3(parts.total) + '</td><td><label class="paid-label"><input class="loan-paid-check" type="checkbox" data-paid-loan-v3="' + loan.id + '"' + (paid ? ' checked' : '') + '> ' + (paid ? 'Sí, pagó' : 'No pagó') + '</label></td><td class="' + (paid ? 'days-paid' : 'days-pending') + '">' + pendingDays + '</td><td><button class="loan-delete" data-delete-loan-v3="' + loan.id + '">⌫</button></td></tr>';
-          }).join('');
-        }
-        document.getElementById('loan-date-v3').value = new Date().toISOString().slice(0, 10);
-        ['loan-amount-v3', 'loan-fixed-v3', 'loan-rate-v3'].forEach(function (id) { document.getElementById(id).addEventListener('input', calculate); });
-        document.getElementById('add-loan-v3').addEventListener('click', function () {
-          var data = fields();
-          if (!data.date || !data.name || data.amount <= 0) { alert('Completa la fecha, el nombre del cliente y un monto mayor a cero.'); return; }
-          var percent = data.amount * data.rate / 100, totalInterest = data.fixed + percent, items = read3();
-          items.unshift({ id: Date.now(), date: data.date, name: data.name, amount: data.amount, fixedInterest: data.fixed, rate: data.rate, percentInterest: percent, interest: totalInterest, total: data.amount + totalInterest, paid: false });
-          write3(items);
-          ['loan-name-v3', 'loan-amount-v3', 'loan-fixed-v3', 'loan-rate-v3'].forEach(function (id) { document.getElementById(id).value = ''; });
-          calculate(); history();
-        });
-        document.getElementById('new-loan-bottom-v3').addEventListener('click', function () { document.getElementById('loan-name-v3').focus(); });
-        document.getElementById('loan-list-v3').addEventListener('change', function (event) {
-          var check = event.target.closest('[data-paid-loan-v3]'); if (!check) return;
-          write3(read3().map(function (loan) { return String(loan.id) === String(check.dataset.paidLoanV3) ? Object.assign({}, loan, { paid: check.checked }) : loan; })); history();
-        });
-        document.getElementById('loan-list-v3').addEventListener('click', function (event) {
-          var button = event.target.closest('[data-delete-loan-v3]'); if (!button) return;
-          write3(read3().filter(function (loan) { return String(loan.id) !== String(button.dataset.deleteLoanV3); })); history();
-        });
-        document.getElementById('back-to-finance-v3').addEventListener('click', function () { window.location.reload(); });
-        calculate(); history();
-      }
-      var observeV3 = new MutationObserver(function () {
-        var v2 = document.querySelector('[data-loans-v2]');
-        if (v2) renderV3();
-      });
-      observeV3.observe(document.body, { childList: true, subtree: true });
-    }());
+      root.addEventListener('input', function(e){if(['loan-amount','loan-fixed','loan-rate'].includes(e.target.id))calc();});
+      root.addEventListener('change', function(e){var status=e.target.dataset.status;if(!status)return;var id=e.target.dataset.id;saveLoans(readLoans().map(function(x){return String(x.id)===String(id)?Object.assign({},x,{paid:status==='paid',paymentDate:status==='paid'?today():null}):x;}));draw();});
+      root.addEventListener('click', function(e){var b=e.target.closest('button');if(!b)return;if(b.id==='loan-back'){window.location.reload();return;}if(b.id==='save-saving'){localStorage.setItem(SAVINGS,String(n(root.querySelector('#saving-initial').value)));draw();return;}if(b.id==='new-loan'){root.querySelector('#loan-name').focus();return;}if(b.id==='add-loan'){var d=field();if(!d.date||!d.name||d.amount<=0){alert('Completa fecha, cliente y monto.');return;}var pct=d.amount*d.rate/100, interest=d.fixed+pct, list=readLoans();list.unshift({id:Date.now(),date:d.date,name:d.name,amount:d.amount,fixedInterest:d.fixed,rate:d.rate,percentInterest:pct,interest:interest,total:d.amount+interest,paid:false,paymentDate:null});saveLoans(list);['loan-name','loan-amount','loan-fixed','loan-rate'].forEach(function(id){root.querySelector('#'+id).value='';});calc();draw();return;}var id=b.dataset.delete;if(id!==undefined){saveLoans(readLoans().filter(function(x){return String(x.id)!==String(id);}));draw();}});
+      calc();draw();
+    }
+    document.addEventListener('click', function (e) {
+      var target = e.target.closest && e.target.closest('[data-open-loans]');
+      if (target) { e.preventDefault(); e.stopImmediatePropagation(); showLoans(); return; }
+      var modules = e.target.closest && e.target.closest('.modules-button');
+      if (modules && !document.querySelector('[data-loans-clean]')) setTimeout(addMenuOption, 0);
+    }, true);
+  }());
   </script>
 </body>
 </html>
+
