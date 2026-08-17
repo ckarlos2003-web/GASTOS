@@ -1,30 +1,17 @@
-const CACHE_NAME = "control-financiero-v1";
-const APP_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_FILES))
-  );
+// v3: la app se puede instalar, pero siempre abre la versión nueva de Vercel.
+self.addEventListener("install", function () {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener("activate", function (event) {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    )
+    caches.keys().then(function (keys) {
+      return Promise.all(
+        keys.map(function (key) {
+          return caches.delete(key);
+        })
+      );
+    })
   );
   self.clients.claim();
-});
-
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
-  );
 });
