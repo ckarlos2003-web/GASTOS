@@ -1,0 +1,19 @@
+{
+  "name": "Control Financiero",
+  "short_name": "Finanzas",
+  "description": "Control personal de gastos, tarjetas, préstamos y compras.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#030817",
+  "theme_color": "#030817",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
