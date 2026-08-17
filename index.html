@@ -139,6 +139,8 @@ react/cjs/react-jsx-runtime.production.js:
     function showLoans() {
       installStyle();
       var root = document.getElementById('root'); if (!root) return;
+      var original = root.querySelector('.app-shell'); if (original) original.style.display = 'none';
+      var view = document.createElement('div'); view.id = 'loan-overlay-root'; root.appendChild(view); root = view;
       root.innerHTML = '<main class="app-shell loans-clean" data-loans-clean="true">' +
         '<header class="topbar"><div class="brand-group"><button class="modules-button" id="loan-back">← MÓDULOS</button><div class="module-icon">₴</div><div><h1>Préstamos</h1><p>Control de capital, interés y cuenta de ahorro</p></div></div><div class="date-control">▣ <span>Control:</span> <strong>Préstamos activos</strong></div></header>' +
         '<section class="advisor-card"><p class="eyebrow"><span></span> CUENTA DE AHORRO Y PRÉSTAMOS</p><h2 style="margin:0 0 8px">Dinero prestado, cobrado y pendiente</h2><p style="margin:0;color:#b9c7d9">El capital prestado sale temporalmente del ahorro. Solo un pago efectivo vuelve a sumar capital e interés.</p><div class="saving-row"><label>Saldo inicial de cuenta de ahorro (S/)<input id="saving-initial" class="saving-input" type="number" min="0" step="0.01" placeholder="0.00"></label><button id="save-saving" class="save-saving" type="button">Guardar saldo</button></div><div class="loan-summary" id="loan-summary"></div></section>' +
@@ -159,7 +161,7 @@ react/cjs/react-jsx-runtime.production.js:
       }
       root.addEventListener('input', function(e){if(['loan-amount','loan-fixed','loan-rate'].includes(e.target.id))calc();});
       root.addEventListener('change', function(e){var status=e.target.dataset.status;if(!status)return;var id=e.target.dataset.id;saveLoans(readLoans().map(function(x){return String(x.id)===String(id)?Object.assign({},x,{paid:status==='paid',paymentDate:status==='paid'?today():null}):x;}));draw();});
-      root.addEventListener('click', function(e){var b=e.target.closest('button');if(!b)return;if(b.id==='loan-back'){window.location.reload();return;}if(b.id==='save-saving'){localStorage.setItem(SAVINGS,String(n(root.querySelector('#saving-initial').value)));draw();return;}if(b.id==='new-loan'){root.querySelector('#loan-name').focus();return;}if(b.id==='add-loan'){var d=field();if(!d.date||!d.name||d.amount<=0){alert('Completa fecha, cliente y monto.');return;}var pct=d.amount*d.rate/100, interest=d.fixed+pct, list=readLoans();list.unshift({id:Date.now(),date:d.date,name:d.name,amount:d.amount,fixedInterest:d.fixed,rate:d.rate,percentInterest:pct,interest:interest,total:d.amount+interest,paid:false,paymentDate:null});saveLoans(list);['loan-name','loan-amount','loan-fixed','loan-rate'].forEach(function(id){root.querySelector('#'+id).value='';});calc();draw();return;}var id=b.dataset.delete;if(id!==undefined){saveLoans(readLoans().filter(function(x){return String(x.id)!==String(id);}));draw();}});
+      root.addEventListener('click', function(e){var b=e.target.closest('button');if(!b)return;if(b.id==='loan-back'){var overlay=document.getElementById('loan-overlay-root');if(overlay)overlay.remove();var home=document.querySelector('#root > .app-shell');if(home)home.style.display='';return;}if(b.id==='save-saving'){localStorage.setItem(SAVINGS,String(n(root.querySelector('#saving-initial').value)));draw();return;}if(b.id==='new-loan'){root.querySelector('#loan-name').focus();return;}if(b.id==='add-loan'){var d=field();if(!d.date||!d.name||d.amount<=0){alert('Completa fecha, cliente y monto.');return;}var pct=d.amount*d.rate/100, interest=d.fixed+pct, list=readLoans();list.unshift({id:Date.now(),date:d.date,name:d.name,amount:d.amount,fixedInterest:d.fixed,rate:d.rate,percentInterest:pct,interest:interest,total:d.amount+interest,paid:false,paymentDate:null});saveLoans(list);['loan-name','loan-amount','loan-fixed','loan-rate'].forEach(function(id){root.querySelector('#'+id).value='';});calc();draw();return;}var id=b.dataset.delete;if(id!==undefined){saveLoans(readLoans().filter(function(x){return String(x.id)!==String(id);}));draw();}});
       calc();draw();
     }
     document.addEventListener('click', function (e) {
@@ -200,6 +202,8 @@ react/cjs/react-jsx-runtime.production.js:
     function showFood() {
       foodStyle();
       var root = document.getElementById('root'); if (!root) return;
+      var original = root.querySelector('.app-shell'); if (original) original.style.display = 'none';
+      var view = document.createElement('div'); view.id = 'food-overlay-root'; root.appendChild(view); root = view;
       root.innerHTML = '<main class="app-shell food-module" data-food-module="true">' +
         '<header class="topbar"><div class="brand-group"><button class="modules-button" id="food-back">← MÓDULOS</button><div class="module-icon">🛒</div><div><h1>Compras de Alimentos</h1><p>Registro de productos y total de supermercado</p></div></div><div class="date-control">▣ <span>Registro:</span> <strong>Compra actual</strong></div></header>' +
         '<section class="advisor-card food-hero"><p class="eyebrow"><span></span> CONTROL DE SUPERMERCADO</p><h2>Organiza tus compras de alimentos</h2><p>Agrega cada producto; el total se calcula con cantidad × precio unitario.</p><div class="food-kpis" id="food-kpis"></div></section>' +
@@ -214,21 +218,38 @@ react/cjs/react-jsx-runtime.production.js:
         var body=root.querySelector('#food-list');
         body.innerHTML=list.length?list.map(function(x){var itemTotal=num(x.qty)*num(x.price);return '<tr><td>'+safeFood(x.name)+'</td><td>'+x.qty+'</td><td>'+sol(x.price)+'</td><td class="total">'+sol(itemTotal)+'</td><td><button class="food-delete" data-food-delete="'+x.id+'">⌫</button></td></tr>';}).join(''):'<tr><td class="loan-empty" colspan="5">Aún no hay productos. Agrega el primero arriba.</td></tr>';
       }
-      root.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;if(b.id==='food-back'){window.location.reload();return;}if(b.id==='food-add'){var d=entry();if(!d.name||d.qty<=0||d.price<0){alert('Completa producto, cantidad y precio unitario.');return;}var list=foodItems();list.push({id:Date.now(),name:d.name,qty:d.qty,price:d.price});saveFood(list);['food-name','food-qty','food-price'].forEach(function(id){root.querySelector('#'+id).value='';});root.querySelector('#food-name').focus();renderFood();return;}if(b.dataset.foodDelete!==undefined){saveFood(foodItems().filter(function(x){return String(x.id)!==String(b.dataset.foodDelete);}));renderFood();}});
+      root.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;if(b.id==='food-back'){var overlay=document.getElementById('food-overlay-root');if(overlay)overlay.remove();var home=document.querySelector('#root > .app-shell');if(home)home.style.display='';return;}if(b.id==='food-add'){var d=entry();if(!d.name||d.qty<=0||d.price<0){alert('Completa producto, cantidad y precio unitario.');return;}var list=foodItems();list.push({id:Date.now(),name:d.name,qty:d.qty,price:d.price});saveFood(list);['food-name','food-qty','food-price'].forEach(function(id){root.querySelector('#'+id).value='';});root.querySelector('#food-name').focus();renderFood();return;}if(b.dataset.foodDelete!==undefined){saveFood(foodItems().filter(function(x){return String(x.id)!==String(b.dataset.foodDelete);}));renderFood();}});
       root.addEventListener('input',function(e){if(e.target.id==='food-qty'||e.target.id==='food-price'){var d=entry();root.querySelector('#food-total').textContent=sol(foodItems().reduce(function(s,x){return s+num(x.qty)*num(x.price);},0)+d.qty*d.price);}});
       renderFood();
     }
     document.addEventListener('click',function(e){var open=e.target.closest&&e.target.closest('[data-open-food]');if(open){e.preventDefault();e.stopImmediatePropagation();showFood();return;}var modules=e.target.closest&&e.target.closest('.modules-button');if(modules&&!document.querySelector('[data-food-module]'))setTimeout(addFoodMenu,0);},true);
   }());
   </script>
-  <script>
+<script>
+  /* Orden visual seguro: conserva los botones y eventos originales de React. */
+  (function () {
+    function heading(text) { var el = document.createElement('div'); el.className = 'menu-section-title'; el.dataset.financialHeading = '1'; el.textContent = text; return el; }
+    function findButton(menu, words) { return [].slice.call(menu.querySelectorAll(':scope > button')).find(function (button) { var text = (button.textContent || '').toLowerCase(); return words.some(function (word) { return text.indexOf(word) !== -1; }); }); }
+    function order() {
+      document.querySelectorAll('.module-menu').forEach(function (menu) {
+        [].slice.call(menu.querySelectorAll('[data-financial-heading]')).forEach(function (item) { item.remove(); });
+        var originalTitle = menu.querySelector(':scope > strong'); if (originalTitle) originalTitle.style.display = 'none';
+        var dashboard = findButton(menu, ['dashboard']), gastos = findButton(menu, ['control de gastos']), prestamos = findButton(menu, ['préstamos']), compras = findButton(menu, ['compras de alimentos']), tarjetas = menu.querySelector(':scope > .cards-menu');
+        var groups = [['DASHBOARD', dashboard, '▦ Gastos generales'], ['CONTROL DE GASTOS', gastos, '▤ Control operativo'], ['PRÉSTAMOS', prestamos, '₴ Gestión de préstamos'], ['COMPRAS DE ALIMENTOS', compras, '🛒 Lista de compras']];
+        groups.forEach(function (group) { if (group[1]) { group[1].textContent = group[2]; menu.appendChild(heading(group[0])); menu.appendChild(group[1]); } });
+        if (tarjetas) { var label = tarjetas.querySelector('b'); if (label) label.style.display = 'none'; menu.appendChild(heading('TARJETAS DE CRÉDITO')); menu.appendChild(tarjetas); }
+      });
+    }
+    var style = document.createElement('style'); style.textContent = '.menu-section-title{margin:15px 10px 6px;color:#8297b4;font-size:10px;letter-spacing:1px;font-weight:900}.module-menu{max-height:82vh;overflow-y:auto}.module-menu .cards-menu{margin-top:0}.module-menu .add-card:before{content:"• Otras tarjetas";display:block;color:#9aacc5;font-size:12px;font-weight:700;margin:11px 0 6px}.module-menu .add-card button{border:1px dashed #16cda8!important;color:#16d8aa!important;background:transparent!important}'; document.head.appendChild(style);
+    document.addEventListener('click', function (event) { if (event.target.closest && event.target.closest('.modules-button')) setTimeout(order, 220); }, true);
+  }());
+</script>
+<script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('./service-worker.js');
     });
   }
-  </script>
+</script>
 </body>
 </html>
-
-
