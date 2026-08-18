@@ -20,6 +20,26 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
 </head>
+<script>
+  /* Fecha actual automática: respeta lunes-viernes y sábados según cada cuenta. */
+  (function () {
+    var KEY = 'control-gastos-datos-v1';
+    try {
+      var cuentas = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!Array.isArray(cuentas) || !cuentas.length) return;
+      var hoy = new Date();
+      var fecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).toISOString().slice(0, 10);
+      localStorage.setItem(KEY, JSON.stringify(cuentas.map(function (cuenta) {
+        var actual = fecha;
+        if (cuenta.inicio && actual < cuenta.inicio) actual = cuenta.inicio;
+        if (cuenta.termino && actual > cuenta.termino) actual = cuenta.termino;
+        return Object.assign({}, cuenta, { actual: actual });
+      })));
+    } catch (error) {
+      console.warn('Fecha automática no disponible.', error);
+    }
+  }());
+</script>
 <body>
   <div id="root"></div>
   <script>
