@@ -253,22 +253,26 @@ react/cjs/react-jsx-runtime.production.js:
   }());
   </script>
 <script>
-  /* Orden visual seguro: conserva los botones y eventos originales de React. */
+  /* MenÃº seguro: no modifica ni mueve nodos de React; solo aplica orden visual. */
   (function () {
-    function heading(text) { var el = document.createElement('div'); el.className = 'menu-section-title'; el.dataset.financialHeading = '1'; el.textContent = text; return el; }
-    function findButton(menu, words) { return [].slice.call(menu.querySelectorAll(':scope > button')).find(function (button) { var text = (button.textContent || '').toLowerCase(); return words.some(function (word) { return text.indexOf(word) !== -1; }); }); }
-    function order() {
+    function prepararMenu() {
       document.querySelectorAll('.module-menu').forEach(function (menu) {
-        [].slice.call(menu.querySelectorAll('[data-financial-heading]')).forEach(function (item) { item.remove(); });
-        var originalTitle = menu.querySelector(':scope > strong'); if (originalTitle) originalTitle.style.display = 'none';
-        var dashboard = findButton(menu, ['dashboard']), gastos = findButton(menu, ['control de gastos']), prestamos = findButton(menu, ['prÃ©stamos']), compras = findButton(menu, ['compras de alimentos']), tarjetas = menu.querySelector(':scope > .cards-menu');
-        var groups = [['DASHBOARD', dashboard, 'â–¦ Gastos generales'], ['CONTROL DE GASTOS', gastos, 'â–¤ Control operativo'], ['PRÃ‰STAMOS', prestamos, 'â‚´ GestiÃ³n de prÃ©stamos'], ['COMPRAS DE ALIMENTOS', compras, 'ðŸ›’ Lista de compras']];
-        groups.forEach(function (group) { if (group[1]) { group[1].textContent = group[2]; menu.appendChild(heading(group[0])); menu.appendChild(group[1]); } });
-        if (tarjetas) { var label = tarjetas.querySelector('b'); if (label) label.style.display = 'none'; menu.appendChild(heading('TARJETAS DE CRÃ‰DITO')); menu.appendChild(tarjetas); }
+        var botones = [].slice.call(menu.querySelectorAll(':scope > button'));
+        botones.forEach(function (boton) {
+          var texto = (boton.textContent || '').toLowerCase();
+          if (texto.indexOf('dashboard') !== -1 || texto.indexOf('gastos generales') !== -1) boton.dataset.menuOrder = '1';
+          else if (texto.indexOf('control de gastos') !== -1 || texto.indexOf('control operativo') !== -1) boton.dataset.menuOrder = '2';
+          else if (texto.indexOf('stamos') !== -1) boton.dataset.menuOrder = '3';
+          else if (texto.indexOf('compras') !== -1 || texto.indexOf('lista de compras') !== -1) boton.dataset.menuOrder = '4';
+        });
+        var tarjetas = menu.querySelector(':scope > .cards-menu');
+        if (tarjetas) tarjetas.dataset.menuOrder = '5';
       });
     }
-    var style = document.createElement('style'); style.textContent = '.menu-section-title{margin:15px 10px 6px;color:#8297b4;font-size:10px;letter-spacing:1px;font-weight:900}.module-menu{max-height:82vh;overflow-y:auto}.module-menu .cards-menu{margin-top:0}.module-menu .add-card:before{content:"â€¢ Otras tarjetas";display:block;color:#9aacc5;font-size:12px;font-weight:700;margin:11px 0 6px}.module-menu .add-card button{border:1px dashed #16cda8!important;color:#16d8aa!important;background:transparent!important}'; document.head.appendChild(style);
-    document.addEventListener('click', function (event) { if (event.target.closest && event.target.closest('.modules-button')) setTimeout(order, 220); }, true);
+    var style = document.createElement('style');
+    style.textContent = '.module-menu{display:flex!important;flex-direction:column!important;max-height:82vh;overflow-y:auto}.module-menu>strong{display:none!important}.module-menu>[data-menu-order="1"]{order:1}.module-menu>[data-menu-order="2"]{order:2}.module-menu>[data-menu-order="3"]{order:3}.module-menu>[data-menu-order="4"]{order:4}.module-menu>[data-menu-order="5"]{order:5}.module-menu>[data-menu-order]::before{display:block;color:#8297b4;font-size:10px;letter-spacing:1px;font-weight:900;margin:10px 0 6px}.module-menu>[data-menu-order="1"]::before{content:"DASHBOARD"}.module-menu>[data-menu-order="2"]::before{content:"CONTROL DE GASTOS"}.module-menu>[data-menu-order="3"]::before{content:"PRESTAMOS"}.module-menu>[data-menu-order="4"]::before{content:"COMPRAS DE ALIMENTOS"}.module-menu>[data-menu-order="5"]::before{content:"TARJETAS DE CREDITO"}.module-menu>[data-menu-order="1"],.module-menu>[data-menu-order="2"],.module-menu>[data-menu-order="3"],.module-menu>[data-menu-order="4"]{font-size:0!important}.module-menu>[data-menu-order="1"]::after,.module-menu>[data-menu-order="2"]::after,.module-menu>[data-menu-order="3"]::after,.module-menu>[data-menu-order="4"]::after{display:block;font-size:14px;color:#e6eefb}.module-menu>[data-menu-order="1"]::after{content:"Gastos generales"}.module-menu>[data-menu-order="2"]::after{content:"Control operativo"}.module-menu>[data-menu-order="3"]::after{content:"Gestion de prestamos"}.module-menu>[data-menu-order="4"]::after{content:"Lista de compras"}.module-menu .cards-menu>b{display:none!important}.module-menu .add-card:before{content:"Otras tarjetas";display:block;color:#9aacc5;font-size:12px;font-weight:700;margin:11px 0 6px}.module-menu .add-card button{border:1px dashed #16cda8!important;color:#16d8aa!important;background:transparent!important}';
+    document.head.appendChild(style);
+    document.addEventListener('click', function (event) { if (event.target.closest && event.target.closest('.modules-button')) setTimeout(prepararMenu, 220); }, true);
   }());
 </script>
 <script>
