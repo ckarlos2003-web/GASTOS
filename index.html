@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -22,7 +21,7 @@
   <link rel="apple-touch-icon" href="icon.svg">
 </head>
 <script>
-  /* Normaliza las tres fechas y actualiza solo la fecha actual. */
+  /* Conserva el período elegido y actualiza siempre la fecha real del equipo. */
   (function () {
     var KEY = 'control-gastos-datos-v1';
     function fechaValida(valor) {
@@ -32,17 +31,33 @@
       var cuentas = JSON.parse(localStorage.getItem(KEY) || 'null');
       if (!Array.isArray(cuentas) || !cuentas.length) return;
       var hoy = new Date();
-      var hoyISO = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).toISOString().slice(0, 10);
+      var hoyISO = [hoy.getFullYear(), String(hoy.getMonth() + 1).padStart(2, '0'), String(hoy.getDate()).padStart(2, '0')].join('-');
       var referencia = cuentas.find(function (cuenta) {
         return fechaValida(cuenta.inicio) && fechaValida(cuenta.termino);
       }) || {};
+      function fechaISO(fecha) {
+        return [fecha.getFullYear(), String(fecha.getMonth() + 1).padStart(2, '0'), String(fecha.getDate()).padStart(2, '0')].join('-');
+      }
+      function sumarMes(fecha) {
+        var dia = fecha.getDate();
+        var resultado = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 1);
+        resultado.setDate(Math.min(dia, new Date(resultado.getFullYear(), resultado.getMonth() + 1, 0).getDate()));
+        return resultado;
+      }
       var actualizado = cuentas.map(function (cuenta) {
         var inicio = fechaValida(cuenta.inicio) ? cuenta.inicio : (fechaValida(referencia.inicio) ? referencia.inicio : hoyISO);
         var termino = fechaValida(cuenta.termino) ? cuenta.termino : (fechaValida(referencia.termino) ? referencia.termino : hoyISO);
         if (termino < inicio) termino = inicio;
+        /* Al cerrar un ciclo, abre automáticamente el siguiente período mensual.
+           Ejemplo: 22/07–22/08 pasa a 22/08–22/09. */
+        while (hoyISO > termino) {
+          var fechaTermino = new Date(termino + 'T00:00:00');
+          inicio = fechaISO(fechaTermino);
+          termino = fechaISO(sumarMes(new Date(termino + 'T00:00:00')));
+        }
+        /* La fecha actual es informativa y nunca se congela en la fecha de término.
+           Si el período ya terminó, el motor deja los días pendientes en cero. */
         var actual = hoyISO;
-        if (actual < inicio) actual = inicio;
-        if (actual > termino) actual = termino;
         return Object.assign({}, cuenta, { inicio: inicio, actual: actual, termino: termino });
       });
       localStorage.setItem(KEY, JSON.stringify(actualizado));
@@ -322,6 +337,112 @@ react/cjs/react-jsx-runtime.production.js:
     style.textContent = '.module-menu{display:flex!important;flex-direction:column!important;max-height:82vh;overflow-y:auto}.module-menu>strong{display:none!important}.module-menu>[data-menu-order="1"]{order:1}.module-menu>[data-menu-order="2"]{order:2}.module-menu>[data-menu-order="3"]{order:3}.module-menu>[data-menu-order="4"]{order:4}.module-menu>[data-menu-order="5"]{order:5}.module-menu>[data-menu-order]::before{display:block;color:#8297b4;font-size:10px;letter-spacing:1px;font-weight:900;margin:10px 0 6px}.module-menu>[data-menu-order="1"]::before{content:"DASHBOARD"}.module-menu>[data-menu-order="2"]::before{content:"CONTROL DE GASTOS"}.module-menu>[data-menu-order="3"]::before{content:"PRESTAMOS"}.module-menu>[data-menu-order="4"]::before{content:"COMPRAS DE ALIMENTOS"}.module-menu>[data-menu-order="5"]::before{content:"TARJETAS DE CREDITO"}.module-menu>[data-menu-order="1"],.module-menu>[data-menu-order="2"],.module-menu>[data-menu-order="3"],.module-menu>[data-menu-order="4"]{font-size:0!important}.module-menu>[data-menu-order="1"]::after,.module-menu>[data-menu-order="2"]::after,.module-menu>[data-menu-order="3"]::after,.module-menu>[data-menu-order="4"]::after{display:block;font-size:14px;color:#e6eefb}.module-menu>[data-menu-order="1"]::after{content:"Gastos generales"}.module-menu>[data-menu-order="2"]::after{content:"Control operativo"}.module-menu>[data-menu-order="3"]::after{content:"Gestion de prestamos"}.module-menu>[data-menu-order="4"]::after{content:"Lista de compras"}.module-menu .cards-menu>b{display:none!important}.module-menu .add-card:before{content:"Otras tarjetas";display:block;color:#9aacc5;font-size:12px;font-weight:700;margin:11px 0 6px}.module-menu .add-card button{border:1px dashed #16cda8!important;color:#16d8aa!important;background:transparent!important}';
     document.head.appendChild(style);
     document.addEventListener('click', function (event) { if (event.target.closest && event.target.closest('.modules-button')) setTimeout(prepararMenu, 220); }, true);
+  }());
+</script>
+<script>
+  /* Menú sábado: Resultado saldo es el presupuesto que queda luego de
+     descontar los sábados ya aplicados en el ciclo actual. */
+  (function () {
+    function numero(valor) { return Number(valor || 0) || 0; }
+    function moneda(valor) { return 'S/ ' + Math.max(0, valor).toFixed(2); }
+    function fila(tabla, texto) {
+      return Array.prototype.find.call(tabla.querySelectorAll('tbody tr'), function (elemento) {
+        return (elemento.cells[0] && elemento.cells[0].textContent || '').toUpperCase().indexOf(texto) !== -1;
+      });
+    }
+    function contarSabados(inicio, fin) {
+      var desde = new Date(inicio + 'T00:00:00');
+      var hasta = new Date(fin + 'T00:00:00');
+      var cantidad = 0;
+      if (isNaN(desde) || isNaN(hasta) || desde > hasta) return 0;
+      while (desde <= hasta) {
+        if (desde.getDay() === 6) cantidad += 1;
+        desde.setDate(desde.getDate() + 1);
+      }
+      return cantidad;
+    }
+    function escribir(celda, valor) {
+      if (celda && celda.textContent !== valor) celda.textContent = valor;
+    }
+    function insigniaDia(celda, valor) {
+      if (!celda) return;
+      var insignia = celda.querySelector('.day-pill');
+      if (!insignia) {
+        celda.textContent = '';
+        insignia = document.createElement('span');
+        insignia.className = 'day-pill';
+        celda.appendChild(insignia);
+      }
+      if (insignia.textContent !== valor) insignia.textContent = valor;
+    }
+    function totalizar(filaObjetivo) {
+      if (!filaObjetivo || filaObjetivo.cells.length < 3) return;
+      var suma = 0;
+      for (var i = 1; i < filaObjetivo.cells.length - 1; i += 1) {
+        suma += numero(filaObjetivo.cells[i].textContent.replace(/[^0-9.-]/g, ''));
+      }
+      escribir(filaObjetivo.cells[filaObjetivo.cells.length - 1], moneda(suma));
+    }
+    function recalcularSabado() {
+      var tabla = document.querySelector('.control-card table');
+      if (!tabla) return;
+      var encabezados = Array.prototype.slice.call(tabla.querySelectorAll('thead th'));
+      var indiceCelda = encabezados.findIndex(function (encabezado) {
+        return (encabezado.textContent || '').toUpperCase().indexOf('MENU SABA') !== -1;
+      });
+      if (indiceCelda < 1) return;
+      var indiceCuenta = indiceCelda - 1;
+      var presupuesto = fila(tabla, 'INGRESO GASTO');
+      var gasto = fila(tabla, 'GASTO POR DIA');
+      var saldo = fila(tabla, 'SALDO TARJETA');
+      var fechaInicio = fila(tabla, 'FECHA DE INICIO');
+      var fechaActual = fila(tabla, 'FECHA ACTUAL');
+      var resultado = fila(tabla, 'RESULTADO SALDO');
+      var faltante = fila(tabla, 'FALTANTE');
+      var aplicados = fila(tabla, 'DIAS APLICADOS');
+      var cuantos = fila(tabla, 'CUANTOS DIAS');
+      if (!presupuesto || !gasto || !saldo || !fechaInicio || !fechaActual || !resultado || !faltante || !aplicados || !cuantos) return;
+      var montoInicial = numero(presupuesto.querySelectorAll('input[type="number"]')[indiceCuenta].value);
+      var gastoPorSabado = numero(gasto.querySelectorAll('input[type="number"]')[indiceCuenta].value);
+      var saldoTarjeta = numero(saldo.querySelectorAll('input[type="number"]')[indiceCuenta].value);
+      var inicio = fechaInicio.querySelectorAll('input[type="date"]')[indiceCuenta].value;
+      var actual = fechaActual.querySelectorAll('input[type="date"]')[indiceCuenta].value;
+      if (!inicio || !actual || gastoPorSabado <= 0) return;
+      /* El ciclo de Menú sábado tiene exactamente cuatro descuentos.
+         El sábado de la fecha actual sí se considera aplicado. */
+      var totalSabadosCiclo = 4;
+      var sabadosAplicados = Math.min(totalSabadosCiclo, contarSabados(inicio, actual));
+      var saldoResultado = Math.max(0, (totalSabadosCiclo - sabadosAplicados) * gastoPorSabado);
+      insigniaDia(cuantos.cells[indiceCelda], 'Dia ' + totalSabadosCiclo);
+      insigniaDia(aplicados.cells[indiceCelda], sabadosAplicados + ' dias');
+      escribir(resultado.cells[indiceCelda], moneda(saldoResultado));
+      var faltanteMenuSabado = Math.max(0, saldoResultado - saldoTarjeta);
+      escribir(faltante.cells[indiceCelda], moneda(faltanteMenuSabado));
+      faltante.cells[indiceCelda].classList.remove('negative', 'muted');
+      faltante.cells[indiceCelda].classList.add(faltanteMenuSabado === 0 ? 'positive' : 'negative');
+      totalizar(resultado);
+      totalizar(faltante);
+      var totalFaltante = faltante.cells[faltante.cells.length - 1];
+      totalFaltante.classList.remove('negative', 'muted');
+      totalFaltante.classList.add('positive');
+      Array.prototype.forEach.call(document.querySelectorAll('.advisor-stats > div'), function (bloque) {
+        var etiqueta = bloque.querySelector('span');
+        var valor = bloque.querySelector('strong');
+        if (etiqueta && valor && (etiqueta.textContent || '').toUpperCase().indexOf('FALTANTE NETO') !== -1) {
+          valor.textContent = moneda(0);
+          valor.classList.remove('pink', 'negative');
+          valor.classList.add('green', 'positive');
+        }
+      });
+    }
+    function programar() { window.setTimeout(recalcularSabado, 30); }
+    window.addEventListener('load', programar);
+    document.addEventListener('input', programar, true);
+    new MutationObserver(programar).observe(document.getElementById('root'), { childList: true, subtree: true, characterData: true });
+    /* Ejecuta también al abrir, incluso si la vista ya terminó de cargar. */
+    programar();
+    window.setTimeout(recalcularSabado, 150);
+    window.setTimeout(recalcularSabado, 600);
   }());
 </script>
 <script>
