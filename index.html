@@ -636,6 +636,96 @@ react/cjs/react-jsx-runtime.production.js:
   }());
 </script>
 <script>
+  /* Comparativo principal del Dashboard: gastos operativos frente a tarjeta. */
+  (function () {
+    function numero(texto) {
+      var limpio = String(texto || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '');
+      return Number(limpio) || 0;
+    }
+    function moneda(valor) { return 'S/ ' + valor.toFixed(2); }
+    function tarjetaActual(raiz) {
+      var bloques = raiz.querySelectorAll('.dashboard-stats > div');
+      for (var i = 0; i < bloques.length; i += 1) {
+        if (/consumo en tarjeta/i.test(bloques[i].textContent || '')) return numero(bloques[i].textContent);
+      }
+      return 0;
+    }
+    function convertirGrafico() {
+      var raiz = document.getElementById('root');
+      if (!raiz) return;
+      raiz.querySelectorAll('.chart-panel').forEach(function (panel) {
+        var titulo = panel.querySelector('h2');
+        var grafico = panel.querySelector('.bar-chart');
+        if (!titulo || !grafico || !/^Gastos por rubro$/i.test((titulo.textContent || '').trim()) || panel.dataset.mfComparativo) return;
+        var gasto = 0;
+        grafico.querySelectorAll('.bar-column strong').forEach(function (valor) { gasto += numero(valor.textContent); });
+        var tarjeta = tarjetaActual(raiz);
+        var mayor = Math.max(gasto, tarjeta, 1);
+        titulo.textContent = 'Mis gastos y Tarjeta';
+        var descripcion = panel.querySelector('.chart-head p');
+        if (descripcion) descripcion.textContent = 'Comparativo acumulado del período actual';
+        grafico.className = 'bar-chart mf-gastos-tarjeta';
+        grafico.innerHTML = '<div class="bar-column"><strong>' + moneda(gasto) + '</strong><div class="bar-track"><i style="height:' + Math.max(4, gasto / mayor * 100) + '%;background:#20d6ac"></i></div><span>Mis gastos</span></div><div class="bar-column"><strong>' + moneda(tarjeta) + '</strong><div class="bar-track"><i style="height:' + Math.max(4, tarjeta / mayor * 100) + '%;background:#31aee5"></i></div><span>Tarjeta de Crédito</span></div>';
+        panel.dataset.mfComparativo = 'true';
+      });
+    }
+    var estilo = document.createElement('style');
+    estilo.textContent = '.mf-gastos-tarjeta{justify-content:center!important;gap:64px!important}.mf-gastos-tarjeta .bar-column{max-width:190px!important;flex:0 1 190px!important}.mf-gastos-tarjeta .bar-track{max-width:96px!important}@media(max-width:700px){.mf-gastos-tarjeta{gap:22px!important}.mf-gastos-tarjeta .bar-column{max-width:130px!important;flex-basis:130px!important}}';
+    document.head.appendChild(estilo);
+    new MutationObserver(convertirGrafico).observe(document.getElementById('root'), { childList: true, subtree: true });
+    window.addEventListener('load', convertirGrafico);
+    convertirGrafico();
+  }());
+</script>
+<script>
+  /* KPI del Dashboard: orden mensual de Control de Gastos y Tarjeta. */
+  (function () {
+    function periodoActual(raiz) {
+      var titulo = raiz.querySelector('.dashboard-hero h2');
+      var coincidencia = titulo && (titulo.textContent || '').match(/^([^:]+)/);
+      return coincidencia ? coincidencia[1].trim().toUpperCase() : 'PERIODO ACTUAL';
+    }
+    function encontrar(bloques, clave, patron) {
+      return bloques.find(function (bloque) { return bloque.dataset.mfKpi === clave || patron.test(bloque.textContent || ''); });
+    }
+    function preparar(bloque, clave, etiqueta, periodo) {
+      if (!bloque) return;
+      bloque.dataset.mfKpi = clave;
+      var titulo = bloque.querySelector('span');
+      if (titulo && titulo.textContent !== etiqueta) titulo.textContent = etiqueta;
+      var mes = bloque.querySelector('.mf-kpi-mes');
+      if (!mes) { mes = document.createElement('small'); mes.className = 'mf-kpi-mes'; bloque.insertBefore(mes, bloque.querySelector('strong')); }
+      if (mes.textContent !== periodo) mes.textContent = periodo;
+    }
+    function ordenarKpi() {
+      var raiz = document.getElementById('root');
+      if (!raiz) return;
+      raiz.querySelectorAll('.dashboard-stats').forEach(function (contenedor) {
+        var bloques = Array.prototype.slice.call(contenedor.children);
+        var gasto = encontrar(bloques, 'gasto', /gasto operativo/i);
+        var presupuesto = encontrar(bloques, 'presupuesto', /presupuesto operativo/i);
+        var tarjeta = encontrar(bloques, 'tarjeta', /consumo en tarjeta/i);
+        var total = encontrar(bloques, 'total', /total registrado/i);
+        if (!gasto || !presupuesto || !tarjeta || !total) return;
+        var mes = periodoActual(raiz);
+        preparar(gasto, 'gasto', 'Control de Gastos acumulado', mes);
+        preparar(presupuesto, 'presupuesto', 'Presupuesto de Control de Gastos', mes);
+        preparar(tarjeta, 'tarjeta', 'Tarjeta de Crédito acumulada', mes);
+        preparar(total, 'total', 'Total acumulado: Control + Tarjeta', mes);
+        var orden = [gasto, presupuesto, tarjeta, total];
+        var yaOrdenado = orden.every(function (bloque, indice) { return contenedor.children[indice] === bloque; });
+        if (!yaOrdenado) orden.forEach(function (bloque) { contenedor.appendChild(bloque); });
+      });
+    }
+    var estilo = document.createElement('style');
+    estilo.textContent = '.dashboard-stats .mf-kpi-mes{display:block!important;color:#7f9abb!important;font-size:9px!important;font-weight:800!important;letter-spacing:.65px!important;margin:4px 0 2px!important}.dashboard-stats>div span{font-weight:800!important;color:#c4d1e4!important}';
+    document.head.appendChild(estilo);
+    new MutationObserver(ordenarKpi).observe(document.getElementById('root'), { childList: true, subtree: true });
+    window.addEventListener('load', ordenarKpi);
+    ordenarKpi();
+  }());
+</script>
+<script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
